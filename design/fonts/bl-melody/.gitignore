@@ -1,0 +1,5 @@
+# Personal-use-only font: keep out of the public repo
+*.otf
+*.ttf
+*.woff
+*.woff2

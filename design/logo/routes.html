@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shots — Logo routes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0b0a; --panel: #141413; --panel-2: #1b1b19;
+    --text: #f3f1ec; --muted: rgba(243,241,236,.58); --faint: rgba(243,241,236,.3);
+    --line: rgba(243,241,236,.1);
+    --amber: #e9a23b;
+    --sans: "Geist", system-ui, sans-serif; --mono: "Geist Mono", ui-monospace, monospace; --serif: "Instrument Serif", Georgia, serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 400 15px/1.55 var(--sans); -webkit-font-smoothing: antialiased; }
+  svg.px, .px svg { shape-rendering: crispEdges; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 56px 24px 96px; }
+  .eyebrow { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  h1 { font: 400 clamp(40px, 6vw, 68px)/1 var(--serif); margin: 10px 0 18px; }
+  .intro { max-width: 680px; color: var(--muted); }
+  .intro strong { color: var(--text); font-weight: 500; }
+
+  .route { margin-top: 72px; }
+  .route-head { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+  .route-head .letter { font: 400 15px var(--mono); color: var(--muted); }
+  .route-head h2 { font: 400 38px/1 var(--serif); margin: 0; }
+  .route-head p { margin: 0; color: var(--muted); flex-basis: 100%; max-width: 720px; }
+
+  .panels { display: grid; grid-template-columns: 1fr 1.4fr 1.8fr; gap: 12px; }
+  .panel {
+    position: relative; min-height: 220px; border-radius: 14px; background: var(--panel);
+    display: grid; place-items: center; padding: 28px; overflow: hidden;
+  }
+  .panel .tag { position: absolute; top: 12px; left: 14px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
+  .panel.light { background: #efece6; color: #121211; }
+  .panel.light .tag { color: rgba(0,0,0,.35); }
+
+  .row2 { display: grid; grid-template-columns: 1.6fr 1fr; gap: 12px; margin-top: 12px; }
+  .context {
+    position: relative; min-height: 300px; border-radius: 14px; overflow: hidden; background: #222 center/cover;
+  }
+  .context::before { content: ""; position: absolute; inset: 0; background: linear-gradient(rgba(0,0,0,.45), transparent 45%); }
+  .context .bar { position: absolute; top: 20px; left: 22px; right: 22px; display: flex; justify-content: space-between; align-items: center; color: #fff; }
+  .context .pills { display: flex; gap: 6px; }
+  .context .pills span { width: 74px; height: 30px; border-radius: 999px; background: rgba(255,255,255,.1); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+  .context .tag { position: absolute; bottom: 12px; left: 14px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.55); }
+
+  .sizes { border-radius: 14px; background: var(--panel); padding: 38px 20px 20px; position: relative; display: flex; flex-direction: column; gap: 14px; justify-content: center; }
+  .sizes .tag { position: absolute; top: 12px; left: 14px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
+  .sizes .line { display: flex; align-items: flex-end; gap: 18px; }
+  .sizes .chip { display: grid; place-items: center; border-radius: 22%; }
+  .sizes .dark .chip { background: #000; color: #fff; }
+  .sizes .lite .chip { background: #efece6; color: #121211; }
+  .sizes small { display: block; text-align: center; font: 400 10px var(--mono); color: var(--faint); margin-top: 6px; }
+
+  .notes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 12px; }
+  .note { border-radius: 14px; background: var(--panel); padding: 18px 20px; font-size: 14px; color: var(--muted); }
+  .note h3 { margin: 0 0 6px; font-size: 11px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--text); }
+  .note ul { margin: 0; padding-left: 18px; }
+
+  /* Wordmarks */
+  .wm-sans { font: 300 44px/1 var(--sans); letter-spacing: .42em; text-transform: uppercase; margin-right: -.42em; }
+  .wm-mono { font: 500 40px/1 var(--mono); letter-spacing: .18em; text-transform: uppercase; margin-right: -.18em; }
+  .wm-serif { font: 400 76px/1 var(--serif); letter-spacing: -.01em; }
+  .wm-serif i { font-style: normal; }
+
+  .lockup { display: inline-flex; align-items: center; gap: 18px; }
+
+  /* Viewfinder frame drawn around the wordmark */
+  .vf { position: relative; padding: 22px 30px; display: inline-block; }
+  .vf i { position: absolute; width: 14px; height: 14px; border: 0 solid currentColor; }
+  .vf i:nth-child(1) { top: 0; left: 0; border-width: 3px 0 0 3px; }
+  .vf i:nth-child(2) { top: 0; right: 0; border-width: 3px 3px 0 0; }
+  .vf i:nth-child(3) { bottom: 0; left: 0; border-width: 0 0 3px 3px; }
+  .vf i:nth-child(4) { bottom: 0; right: 0; border-width: 0 3px 3px 0; }
+
+  /* Film edge lockup */
+  .film { display: inline-flex; flex-direction: column; gap: 10px; }
+  .film .holes { display: flex; gap: 10px; }
+  .film .holes b { width: 10px; height: 8px; background: currentColor; opacity: .9; border-radius: 1px; }
+  .film .edge { display: flex; align-items: baseline; gap: 18px; }
+  .film .edge span { font: 500 13px var(--mono); letter-spacing: .12em; color: var(--amber); }
+
+  .inline-ap { display: inline-flex; align-items: center; }
+  .inline-ap svg { width: .78em; height: .78em; margin: 0 .42em 0 0; }
+
+  .rec { margin-top: 88px; border-radius: 18px; background: var(--panel-2); padding: 32px; }
+  .rec h2 { font: 400 36px/1.05 var(--serif); margin: 0 0 12px; }
+  .rec p, .rec li { color: var(--muted); }
+  .rec strong { color: var(--text); font-weight: 500; }
+  .rec ol { padding-left: 20px; }
+
+  @media (max-width: 900px) {
+    .panels, .row2, .notes { grid-template-columns: 1fr; }
+    .wm-sans { font-size: 32px; }
+    .wm-serif { font-size: 60px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Shots · Brand exploration · v0.1</div>
+  <h1>Logo routes</h1>
+  <p class="intro">
+    Five directions built around the idea of <strong>a photograph as a “shot”</strong>. Each route shows a
+    <strong>mark</strong>, a <strong>wordmark</strong> and a <strong>lockup</strong> (the two together), then tests it on a photo in the gallery header and at favicon sizes.
+    Everything is monochrome on purpose: the photos bring the colour.
+  </p>
+
+  <div id="routes"></div>
+
+  <section class="rec">
+    <div class="eyebrow">Recommendation</div>
+    <h2>Lead with A (Viewfinder)</h2>
+    <p>
+      <strong>A is the only route where the mark does something in the product.</strong> The corner brackets can become the UI's own language:
+      the outline on the selected thumbnail, the focus ring, a loading state, the frame around the credit line. The mark literally frames content, which is "photos first" as a symbol.
+      It's built on the same 2px pixel grid as pixelarticons, so logo and icons feel like one system, and it stays crisp at 16px.
+    </p>
+    <p>
+      <strong>B</strong> is the boldest option, but a fully pixel wordmark is a big personality to put beside the photography. Pairing A's pixel mark with a clean sans wordmark keeps the pixel detail in one place: the mark and the icons.
+      <strong>E</strong> is the safe, editorial alternative if the pixel direction starts to feel too playful.
+    </p>
+    <ol>
+      <li>Pick one or two routes to take further.</li>
+      <li>Refine: letterspacing and weight, a custom-drawn wordmark, and how the mark and wordmark align.</li>
+      <li>Apply the favourite in the gallery prototype, plus the favicon and the social preview image.</li>
+    </ol>
+  </section>
+</div>
+
+<script>
+  // ---------- Builders ----------
+  const svg = (inner, vb = 24, cls = '') => `<svg class="${cls}" viewBox="0 0 ${vb} ${vb}" fill="currentColor" aria-hidden="true">${inner}</svg>`;
+  const R = (x, y, w, h) => `<rect x="${x}" y="${y}" width="${w}" height="${h}"/>`;
+
+  // A — Viewfinder: four corner brackets + a centre focus point (2px pixel grid, like pixelarticons)
+  const viewfinder = svg(
+    R(2,2,6,2)+R(2,4,2,4) + R(16,2,6,2)+R(20,4,2,4) + R(2,20,6,2)+R(2,16,2,4) + R(16,20,6,2)+R(20,16,2,4) + R(10,10,4,4),
+    24, 'px');
+
+  // B — Pixel letters (5×7 bitmaps)
+  const GLYPHS = {
+    S: ['.####', '#....', '#....', '.###.', '....#', '....#', '####.'],
+    H: ['#...#', '#...#', '#...#', '#####', '#...#', '#...#', '#...#'],
+    O: ['.###.', '#...#', '#...#', '#...#', '#...#', '#...#', '.###.'],
+    T: ['#####', '..#..', '..#..', '..#..', '..#..', '..#..', '..#..'],
+  };
+  function pixelText(str, px, gapCols = 2) {
+    let x = 0, rects = '';
+    for (const ch of str) {
+      GLYPHS[ch].forEach((row, y) => [...row].forEach((c, cx) => { if (c === '#') rects += R((x + cx) * px, y * px, px, px); }));
+      x += 5 + gapCols;
+    }
+    const w = (x - gapCols) * px, h = 7 * px;
+    return `<svg class="px" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" fill="currentColor" aria-label="${str}">${rects}</svg>`;
+  }
+  // Pixel S mark centred in a 9×9 grid
+  const pixelS = (() => {
+    let r = '';
+    GLYPHS.S.forEach((row, y) => [...row].forEach((c, x) => { if (c === '#') r += R(x + 2, y + 1, 1, 1); }));
+    return svg(r, 9, 'px');
+  })();
+
+  // C — Film frame: a single frame with sprocket holes (cut out with evenodd)
+  const filmFrame = `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M4 1h16a3 3 0 0 1 3 3v16a3 3 0 0 1-3 3H4a3 3 0 0 1-3-3V4a3 3 0 0 1 3-3Z
+    M3.5 3h2v2h-2Z M8.5 3h2v2h-2Z M13.5 3h2v2h-2Z M18.5 3h2v2h-2Z
+    M3.5 19h2v2h-2Z M8.5 19h2v2h-2Z M13.5 19h2v2h-2Z M18.5 19h2v2h-2Z
+    M3 7h18v10H3Z"/></svg>`;
+
+  // D — Aperture: six blades, each hexagon edge extended to the barrel
+  function aperture(stroke = 1.5) {
+    const c = 12, Rr = 10.2, r = 4.2, pts = [];
+    for (let i = 0; i < 6; i++) { const a = (Math.PI / 3) * i - Math.PI / 2; pts.push([c + r * Math.cos(a), c + r * Math.sin(a)]); }
+    let lines = '';
+    for (let i = 0; i < 6; i++) {
+      const [x0, y0] = pts[i], [x1, y1] = pts[(i + 1) % 6];
+      let dx = x1 - x0, dy = y1 - y0; const L = Math.hypot(dx, dy); dx /= L; dy /= L;
+      const vx = x0 - c, vy = y0 - c, b = vx * dx + vy * dy;
+      const t = -b + Math.sqrt(b * b - (vx * vx + vy * vy) + Rr * Rr);
+      lines += `<line x1="${x0.toFixed(2)}" y1="${y0.toFixed(2)}" x2="${(x0 + t * dx).toFixed(2)}" y2="${(y0 + t * dy).toFixed(2)}"/>`;
+    }
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${stroke}" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="${Rr}"/>${lines}</svg>`;
+  }
+
+  // E — Serif monogram in a tile shaped like the gallery thumbnails
+  const monogram = (fs = 1) => `<span style="display:inline-grid;place-items:center;width:${88*fs}px;height:${88*fs}px;border-radius:${20*fs}px;background:currentColor"><span style="font:400 ${64*fs}px/1 var(--serif);color:var(--mono-ink,#0b0b0a);transform:translateY(${3*fs}px)">S.</span></span>`;
+
+  const sized = (markHtml, n) => `<div style="width:${n}px;height:${n}px;display:grid;place-items:center"><div style="width:${n}px;height:${n}px">${markHtml.replace('<svg', `<svg width="${n}" height="${n}"`)}</div></div>`;
+
+  // ---------- Routes ----------
+  const ROUTES = [
+    {
+      id: 'A', name: 'Viewfinder',
+      idea: 'The four corners of a viewfinder or crop frame, with a focus point in the middle: the moment before the shot. Drawn on the same 2px pixel grid as the icon set.',
+      mark: `<div style="width:120px;height:120px">${viewfinder}</div>`,
+      word: `<span class="wm-sans">Shots</span>`,
+      lock: `<span class="lockup"><span style="width:40px;height:40px;display:block">${viewfinder}</span><span class="wm-sans" style="font-size:34px">Shots</span></span>
+             <div style="margin-top:26px;text-align:center"><span class="vf"><i></i><i></i><i></i><i></i><span class="wm-sans" style="font-size:26px">Shots</span></span></div>`,
+      ctx: `<span class="lockup" style="gap:12px"><span style="width:22px;height:22px;display:block">${viewfinder}</span><span class="wm-sans" style="font-size:17px">Shots</span></span>`,
+      small: viewfinder,
+      why: ['The mark is a frame, and the product is about framing photos.', 'Can become the UI motif: selected tile, focus ring, loading, crop.', 'Matches the pixelarticons grid exactly, so it stays crisp at 16px.'],
+      risk: ['Corner brackets are a familiar "scan" / "focus" icon, so the wordmark carries the recognition.', 'A thin frame can look like an empty placeholder when it appears on its own.'],
+      photo: 57,
+    },
+    {
+      id: 'B', name: 'Pixel',
+      idea: 'A wordmark drawn entirely on the pixel grid: the digital shot, the sensor, the pixel. It takes the pixelarticons icon style all the way into the name.',
+      mark: `<div style="width:120px;height:120px">${pixelS}</div>`,
+      word: pixelText('SHOTS', 6),
+      lock: `<span class="lockup" style="gap:22px"><span style="width:62px;height:62px;display:block;background:currentColor;border-radius:14px;padding:8px"><span style="display:block;color:#0b0b0a">${pixelS}</span></span>${pixelText('SHOTS', 5)}</span>`,
+      ctx: pixelText('SHOTS', 3),
+      small: pixelS,
+      why: ['The most distinctive and ownable route, and nobody else in the photo space looks like this.', 'Fully consistent with the icon set.', 'Playful and warm, which fits "joyful exploration".'],
+      risk: ['Loud next to the photography, and can feel "gaming" or retro-tech.', 'Pixel type is hard to scale: it only looks right at exact multiples of its pixel size.'],
+      photo: 88,
+    },
+    {
+      id: 'C', name: 'Frame',
+      idea: 'A single frame of film with its sprocket holes, and film edge printing (frame numbers) as a typographic detail. Nods to analogue shooting and to the tile shape in the grid.',
+      mark: `<div style="width:120px;height:120px">${filmFrame}</div>`,
+      word: `<span class="wm-mono">Shots</span>`,
+      lock: `<span class="film"><span class="holes">${'<b></b>'.repeat(14)}</span><span class="edge"><span class="wm-mono" style="font-size:30px;color:var(--text)">Shots</span><span>▸ 01A</span><span>400</span></span><span class="holes">${'<b></b>'.repeat(14)}</span></span>`,
+      ctx: `<span class="lockup" style="gap:12px"><span style="width:24px;height:24px;display:block">${filmFrame}</span><span class="wm-mono" style="font-size:16px">Shots</span></span>`,
+      small: filmFrame,
+      why: ['Instantly reads as "photography".', 'Edge-print details (frame numbers, amber) give a rich secondary language for counters and labels, e.g. "▸ 12 / 43".', 'The mono type suits metadata-heavy UI.'],
+      risk: ['Film carries nostalgia, and may suggest film-only when most shots are probably digital.', 'The sprocket holes turn to mush below about 20px.'],
+      photo: 67,
+    },
+    {
+      id: 'D', name: 'Aperture',
+      idea: 'The iris of a lens, where the shot happens. It swaps in for the O, so the mark lives inside the wordmark.',
+      mark: `<div style="width:120px;height:120px">${aperture(1.3)}</div>`,
+      word: `<span class="wm-sans inline-ap">SH${aperture(1.6)}TS</span>`,
+      lock: `<span class="lockup"><span style="width:46px;height:46px;display:block">${aperture(1.5)}</span><span class="wm-sans" style="font-size:34px">Shots</span></span>`,
+      ctx: `<span class="wm-sans inline-ap" style="font-size:18px">SH${aperture(2)}TS</span>`,
+      small: aperture(2),
+      why: ['Universally understood as "camera".', 'The O-as-aperture idea is compact and makes a neat app icon.'],
+      risk: ['The most clichéd route: apertures are everywhere in photography branding.', 'A vector stroke style that clashes with the pixel icons.'],
+      photo: 18,
+    },
+    {
+      id: 'E', name: 'Full stop',
+      idea: '“Shots.” — the full stop is the moment captured. A quiet, editorial serif that steps back and lets the photos lead. The monogram tile echoes the rounded thumbnails.',
+      mark: `<div style="color:var(--text)">${monogram(1.1)}</div>`,
+      word: `<span class="wm-serif">Shots.</span>`,
+      lock: `<span class="lockup" style="gap:18px"><span style="color:var(--text)">${monogram(.7)}</span><span class="wm-serif" style="font-size:64px">Shots.</span></span>`,
+      ctx: `<span class="wm-serif" style="font-size:34px">Shots.</span>`,
+      small: null,
+      why: ['The most restrained route, and closest to the Lassie and Perplexity references.', 'The serif is already in the product (info panel headings).', 'Feels premium and photographer-owned.'],
+      risk: ['Less ownable, since plenty of editorial brands look like this.', 'No link to the pixel icon system, so the product would have two personalities.'],
+      photo: 129,
+    },
+  ];
+
+  const sizesRow = (r) => {
+    const mk = n => r.small ? sized(r.small, n * .75) : `<span style="font:400 ${Math.round(n*.62)}px/1 var(--serif)">S.</span>`;
+    const set = cls => `<div class="line ${cls}">${[16, 24, 32, 48].map(n => `<div><div class="chip" style="width:${n}px;height:${n}px">${mk(n)}</div><small>${n}</small></div>`).join('')}</div>`;
+    return `<div class="sizes"><span class="tag">Favicon / app icon</span>${set('dark')}${set('lite')}</div>`;
+  };
+
+  document.getElementById('routes').innerHTML = ROUTES.map(r => `
+    <section class="route" id="route-${r.id}">
+      <div class="route-head"><span class="letter">${r.id}</span><h2>${r.name}</h2><p>${r.idea}</p></div>
+      <div class="panels">
+        <div class="panel"><span class="tag">Mark</span>${r.mark}</div>
+        <div class="panel"><span class="tag">Wordmark</span>${r.word}</div>
+        <div class="panel"><span class="tag">Lockup</span><div style="text-align:center">${r.lock}</div></div>
+      </div>
+      <div class="row2">
+        <div class="context" style="background-image:url(https://picsum.photos/id/${r.photo}/1400/800)">
+          <div class="bar">${r.ctx}<span class="pills"><span></span><span></span><span></span></span></div>
+          <span class="tag">In the gallery header</span>
+        </div>
+        ${sizesRow(r)}
+      </div>
+      <div class="notes">
+        <div class="note"><h3>Why it works</h3><ul>${r.why.map(x => `<li>${x}</li>`).join('')}</ul></div>
+        <div class="note"><h3>Watch out for</h3><ul>${r.risk.map(x => `<li>${x}</li>`).join('')}</ul></div>
+      </div>
+    </section>`).join('');
+</script>
+</body>
+</html>

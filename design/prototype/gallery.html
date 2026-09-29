@@ -1,0 +1,790 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shots — Gallery prototype</title>
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0b0a;
+    --surface: #161614;
+    --text: #f3f1ec;
+    --muted: rgba(243, 241, 236, .58);
+    --faint: rgba(243, 241, 236, .32);
+    --line: rgba(243, 241, 236, .16);
+    --line-strong: rgba(243, 241, 236, .34);
+    --glass: rgba(22, 22, 20, .56);
+    --glass-strong: rgba(26, 26, 24, .82);
+    --blur: blur(22px) saturate(150%);
+    /* Borderless frosted controls */
+    --ctl-fill: rgba(255, 255, 255, .08);
+    --ctl-fill-hover: rgba(255, 255, 255, .15);
+    --ctl-fill-dark: rgba(14, 14, 13, .26);
+    --ctl-blur: blur(30px) saturate(170%);
+    --radius-stage: var(--radius-tile); /* hero matches the thumbnails */
+    --radius-tile: 14px;
+    --radius-panel: 18px;
+    --gap: 14px;
+    --gutter: var(--gap); /* page margin matches the thumbnail gap */
+    --sans: "Geist", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --serif: "Instrument Serif", Georgia, serif;
+    --ease: cubic-bezier(.2, .7, .2, 1);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 400 14px/1.45 var(--sans); -webkit-font-smoothing: antialiased;
+  }
+  button, a { font: inherit; color: inherit; }
+  button { cursor: pointer; background: none; border: 0; padding: 0; }
+  img { display: block; }
+  :focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* ---------- Header: logo + filters sit in the hero, then stay pinned (no bar) on scroll ---------- */
+  .header {
+    --hh: calc(var(--gutter) + 64px);
+    position: sticky; top: 0; z-index: 30;
+    display: flex; align-items: center; justify-content: space-between; gap: 24px;
+    height: var(--hh); margin-bottom: calc(-1 * var(--hh));
+    padding: var(--gutter) calc(var(--gutter) + 20px) 0;
+    pointer-events: none; /* the empty strip between logo and filters shouldn't block the grid */
+  }
+  .header > * { pointer-events: auto; }
+  .logo { display: block; flex: none; position: relative; }
+  /* Soft shadow keeps the white logo legible over bright photos */
+  .logo img { display: block; height: 26px; width: auto; filter: drop-shadow(0 1px 10px rgba(0,0,0,.35)); transition: opacity .35s var(--ease); }
+  /* Frosted version: the same glass as the pills, cut to the logo's shape */
+  .logo-glass {
+    position: absolute; inset: 0; opacity: 0; transition: opacity .35s var(--ease);
+    background: var(--ctl-fill-hover); backdrop-filter: var(--ctl-blur); -webkit-backdrop-filter: var(--ctl-blur);
+    -webkit-mask: url(assets/shots-logo-white.svg) center / contain no-repeat; mask: url(assets/shots-logo-white.svg) center / contain no-repeat;
+  }
+  /* White over the hero; frosted once the grid is behind it */
+  .header.over-grid .logo img { opacity: 0; }
+  .header.over-grid .logo-glass { opacity: 1; }
+  .filters { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+
+  .pill {
+    position: relative; display: inline-flex; align-items: center; gap: 8px;
+    height: 38px; padding: 0 14px 0 13px; border-radius: 999px;
+    background: var(--ctl-fill); backdrop-filter: var(--ctl-blur); -webkit-backdrop-filter: var(--ctl-blur);
+    font-size: 12px; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap;
+    transition: background .2s, border-color .2s, color .2s;
+  }
+  .pill:hover, .pill[aria-expanded="true"] { background: var(--ctl-fill-hover); }
+  .pill.active { background: var(--text); color: var(--bg); }
+  /* Pixel icons are drawn on a 12px grid: keep sizes at multiples of 6 so pixels stay crisp */
+  svg { shape-rendering: crispEdges; }
+  .pill svg { width: 18px; height: 18px; flex: none; }
+  .pill .chev { width: 12px; height: 12px; opacity: .8; transition: transform .2s; }
+  .pill[aria-expanded="true"] .chev { transform: rotate(180deg); }
+  .clear-all { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 0 6px; height: 38px; }
+  .clear-all:hover { color: var(--text); }
+  .result-count { font-size: 12px; letter-spacing: .06em; color: var(--muted); font-variant-numeric: tabular-nums; padding: 0 4px 0 6px; }
+  .pill .n { opacity: .6; font-variant-numeric: tabular-nums; }
+  .mobile-filter { display: none; }
+  .header-right { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .pill.shuffle { width: 38px; padding: 0; justify-content: center; flex: none; }
+  .pill.shuffle svg { transition: transform .35s var(--ease); }
+  .pill.shuffle:active svg { transform: rotate(-180deg) scale(.9); }
+
+  /* ---------- Filter popover ---------- */
+  .popover {
+    position: fixed; z-index: 40; min-width: 240px; max-width: 300px; max-height: min(420px, 70vh); overflow: auto;
+    padding: 6px; border-radius: var(--radius-panel);
+    background: var(--glass-strong); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+    border: 1px solid var(--line); box-shadow: 0 20px 60px rgba(0,0,0,.45);
+    opacity: 0; transform: translateY(-4px); pointer-events: none; transition: opacity .16s, transform .16s var(--ease);
+  }
+  .popover.open { opacity: 1; transform: none; pointer-events: auto; }
+  .opt {
+    display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+    padding: 9px 10px; border-radius: 10px; font-size: 14px;
+  }
+  .opt:hover:not(:disabled) { background: rgba(255,255,255,.07); }
+  .opt:disabled { color: var(--faint); cursor: default; }
+  .box { width: 16px; height: 16px; border-radius: 5px; border: 1px solid var(--line-strong); display: grid; place-items: center; flex: none; }
+  .opt[aria-checked="true"] .box { background: var(--text); border-color: var(--text); }
+  .opt[aria-checked="true"] .box::after { content: ""; width: 8px; height: 4px; border: 1.6px solid var(--bg); border-top: 0; border-right: 0; transform: translateY(-1px) rotate(-45deg); }
+  .swatch { width: 14px; height: 14px; border-radius: 50%; flex: none; box-shadow: inset 0 0 0 1px rgba(255,255,255,.2); }
+  .opt .name { flex: 1; }
+  .opt .count { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 12px; }
+  .pop-foot { display: flex; justify-content: space-between; padding: 8px 10px 6px; margin-top: 4px; border-top: 1px solid var(--line); }
+  .text-btn { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .text-btn:hover { color: var(--text); }
+
+  /* ---------- Stage ---------- */
+  main { padding: var(--gutter) var(--gutter) 64px; }
+  .stage {
+    position: relative; overflow: hidden; border-radius: var(--radius-stage);
+    height: clamp(420px, calc(100vh - 2 * var(--gutter)), 1000px); background: var(--surface);
+    isolation: isolate;
+  }
+  .stage-bg { position: absolute; inset: -60px; z-index: -1; background-size: cover; background-position: center; filter: blur(50px) brightness(.45) saturate(1.2); transform: scale(1.1); transition: background-image .4s; }
+  .stage-tint { position: absolute; inset: 0; z-index: -1; opacity: .35; mix-blend-mode: soft-light; transition: background .5s; }
+  .stage-img {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; cursor: zoom-in; transition: opacity .35s var(--ease);
+  }
+  /* Keeps logo, filters and controls legible over the full-bleed photo */
+  .stage::before {
+    content: ""; position: absolute; inset: 0 0 auto 0; height: 140px; z-index: 1; pointer-events: none;
+    background: linear-gradient(rgba(0,0,0,.4), transparent);
+  }
+  .stage::after {
+    content: ""; position: absolute; inset: auto 0 0 0; height: 160px; pointer-events: none;
+    background: linear-gradient(transparent, rgba(0,0,0,.55));
+  }
+  .stage .controls { z-index: 1; }
+  .stage-img.loading, .ov-img.loading { opacity: 0; }
+  .controls { position: absolute; left: 20px; right: 20px; bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .controls .group { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .round {
+    width: 48px; height: 48px; flex: none; border-radius: 50%; display: grid; place-items: center;
+    background: var(--ctl-fill-dark); backdrop-filter: var(--ctl-blur); -webkit-backdrop-filter: var(--ctl-blur);
+    transition: background .2s;
+  }
+  .round:hover { background: var(--ctl-fill-hover); }
+  .round[aria-pressed="true"] { background: var(--text); color: var(--bg); }
+  .round svg { width: 24px; height: 24px; }
+  .caption { margin-left: 8px; min-width: 0; overflow: hidden; }
+  .caption .s { color: rgba(255,255,255,.82); font-size: 13px; white-space: nowrap; }
+  .counter { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; margin-right: 6px; letter-spacing: .04em; }
+
+  /* ---------- Grid ---------- */
+  .grid-wrap { margin-top: var(--gap); }
+  .grid-wrap { container-type: inline-size; }
+  .tiles {
+    --cols: 3;
+    display: grid; gap: var(--gap);
+    grid-template-columns: repeat(var(--cols), 1fr);
+    grid-auto-rows: calc((100cqw - (var(--cols) - 1) * var(--gap)) / var(--cols) * .6);
+    grid-auto-flow: row dense;
+  }
+  .tile {
+    position: relative; overflow: hidden; border-radius: var(--radius-tile); background: var(--surface);
+    cursor: zoom-in; outline-offset: 3px;
+  }
+  .tile.tall { grid-row: span 2; }
+  .tile img { width: 100%; height: 100%; object-fit: cover; transition: transform .6s var(--ease), opacity .4s; opacity: 0; }
+  .tile img.ready { opacity: 1; }
+  .tile:hover img { transform: scale(1.03); }
+  .tile .meta {
+    position: absolute; inset: auto 0 0 0; padding: 40px 14px 12px; pointer-events: none;
+    background: linear-gradient(transparent, rgba(0,0,0,.6));
+    opacity: 0; transform: translateY(6px); transition: opacity .25s, transform .25s var(--ease);
+  }
+  .tile:hover .meta, .tile:focus-visible .meta { opacity: 1; transform: none; }
+  .tile .meta .s { font-size: 12px; color: rgba(255,255,255,.85); }
+  .tile.current { outline: 2px solid var(--text); }
+  .empty { padding: 80px 0; text-align: center; color: var(--muted); }
+  .empty .t { font: 400 30px/1.2 var(--serif); color: var(--text); margin-bottom: 8px; }
+  .empty button { margin-top: 18px; }
+
+  /* ---------- Fullscreen overlay ---------- */
+  .overlay {
+    position: fixed; inset: 0; z-index: 50; background: #050505; isolation: isolate;
+    opacity: 0; pointer-events: none; transition: opacity .25s var(--ease);
+  }
+  .overlay.open { opacity: 1; pointer-events: auto; }
+  .ov-glow { position: absolute; inset: 0; z-index: -1; opacity: .22; transition: background .5s; }
+  .ov-img { position: absolute; inset: 76px 24px 96px; width: calc(100% - 48px); height: calc(100% - 172px); object-fit: contain; transition: opacity .3s var(--ease); }
+  .ov-top { position: absolute; top: 18px; left: 20px; right: 20px; display: flex; justify-content: space-between; align-items: center; }
+  .overlay .controls { bottom: 22px; }
+
+  /* ---------- Info panel ---------- */
+  .info {
+    position: fixed; z-index: 60; right: 20px; top: 84px; width: 340px; max-height: calc(100vh - 110px); overflow: auto;
+    padding: 22px; border-radius: var(--radius-panel);
+    background: var(--glass-strong); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+    border: 1px solid var(--line); box-shadow: 0 24px 70px rgba(0,0,0,.5);
+    opacity: 0; transform: translateX(12px); pointer-events: none; transition: opacity .2s, transform .25s var(--ease);
+  }
+  .info.open { opacity: 1; transform: none; pointer-events: auto; }
+  .info h2 { font: 400 32px/1.05 var(--serif); margin: 0 0 4px; }
+  .info .sub { color: var(--muted); margin-bottom: 18px; }
+  .info dl { display: grid; grid-template-columns: 88px 1fr; gap: 10px 12px; margin: 0; font-size: 13px; }
+  .info dt { color: var(--muted); padding-top: 5px; }
+  .info dd { margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 11px; border-radius: 999px;
+    background: var(--ctl-fill); font-size: 12px; transition: background .2s;
+  }
+  button.chip:hover { background: var(--ctl-fill-hover); }
+  .plain { padding-top: 5px; }
+  .info .hint { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--faint); font-size: 12px; }
+  .panel-close { position: absolute; top: 14px; right: 14px; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; color: var(--muted); }
+  .panel-close:hover { color: var(--text); background: rgba(255,255,255,.08); }
+  .panel-close svg { width: 18px; height: 18px; }
+
+  /* ---------- Download dialog ---------- */
+  .scrim { position: fixed; inset: 0; z-index: 70; background: rgba(0,0,0,.55); display: grid; place-items: center; padding: 16px; opacity: 0; pointer-events: none; transition: opacity .2s; }
+  .scrim.open { opacity: 1; pointer-events: auto; }
+  .dialog {
+    position: relative; width: min(460px, 100%); max-height: calc(100vh - 32px); overflow: auto;
+    border-radius: 22px; padding: 26px;
+    background: var(--glass-strong); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+    border: 1px solid var(--line); box-shadow: 0 30px 90px rgba(0,0,0,.6);
+    transform: translateY(8px) scale(.99); transition: transform .25s var(--ease);
+  }
+  .scrim.open .dialog { transform: none; }
+  .dl-head { display: flex; gap: 16px; align-items: center; margin-bottom: 22px; }
+  .dl-head img { width: 76px; height: 76px; object-fit: cover; border-radius: 10px; flex: none; }
+  .dl-head h2 { font: 400 28px/1.05 var(--serif); margin: 0 0 4px; }
+  .dl-head p { margin: 0; color: var(--muted); font-size: 13px; }
+  .btn {
+    display: flex; align-items: center; justify-content: center; gap: 10px; height: 48px; width: 100%;
+    border-radius: 999px; background: var(--text); color: var(--bg); text-decoration: none; font-weight: 500;
+    transition: opacity .2s;
+  }
+  .btn:hover { opacity: .88; }
+  .btn svg { width: 18px; height: 18px; flex: none; }
+  .btn.ghost { background: var(--ctl-fill); color: var(--text); }
+  .btn.ghost:hover { background: var(--ctl-fill-hover); opacity: 1; }
+  .section { margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--line); }
+  .section h3 { margin: 0 0 6px; font-size: 12px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; }
+  .section p { margin: 0 0 14px; color: var(--muted); font-size: 13px; }
+  .credit { display: flex; gap: 8px; align-items: stretch; }
+  .credit code {
+    flex: 1; padding: 11px 13px; border-radius: 12px; border: 1px solid var(--line); background: rgba(0,0,0,.25);
+    font: 400 12.5px/1.5 var(--sans); color: var(--text);
+  }
+  .credit .btn { width: auto; height: auto; padding: 0 16px; border-radius: 12px; font-size: 13px; }
+  .licence { margin-top: 10px; font-size: 12px; color: var(--faint); }
+
+  /* ---------- Mobile sheet ---------- */
+  .sheet {
+    position: fixed; inset: auto 0 0 0; z-index: 70; max-height: 86vh; overflow: auto;
+    padding: 10px 20px calc(20px + env(safe-area-inset-bottom));
+    border-radius: 22px 22px 0 0; background: var(--glass-strong); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+    border-top: 1px solid var(--line);
+    transform: translateY(100%); transition: transform .3s var(--ease);
+  }
+  .sheet.open { transform: none; }
+  .grabber { width: 40px; height: 4px; border-radius: 4px; background: var(--line-strong); margin: 0 auto 14px; }
+  .sheet h3 { margin: 18px 0 10px; font-size: 12px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chips .chip[aria-pressed="true"] { background: var(--text); color: var(--bg); }
+  .chips .chip:disabled { opacity: .35; }
+  .chips .chip .count { opacity: .6; font-variant-numeric: tabular-nums; }
+  .sheet-foot {
+    position: sticky; bottom: calc(-20px - env(safe-area-inset-bottom)); display: flex; gap: 10px;
+    margin: 22px -20px 0; padding: 28px 20px calc(20px + env(safe-area-inset-bottom));
+    background: linear-gradient(transparent, #1b1b19 26px);
+  }
+  .sheet-scrim { position: fixed; inset: 0; z-index: 65; background: rgba(0,0,0,.5); opacity: 0; pointer-events: none; transition: opacity .25s; }
+  .sheet-scrim.open { opacity: 1; pointer-events: auto; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 28px; z-index: 90; transform: translate(-50%, 16px); opacity: 0;
+    padding: 10px 16px; border-radius: 999px; background: var(--text); color: var(--bg); font-size: 13px;
+    transition: opacity .2s, transform .25s var(--ease); pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 1100px) {
+    .tiles { --cols: 2; }
+  }
+  /* Below this the five pills + count no longer fit on one line */
+  @media (max-width: 1100px) {
+    .filters { display: none; }
+    .mobile-filter { display: inline-flex; }
+  }
+  @media (max-width: 640px) {
+    :root { --gap: 8px; --radius-tile: 10px; }
+    .logo img { height: 20px; }
+    .stage { height: 68vh; }
+    .controls { left: 12px; right: 12px; bottom: 14px; }
+    .caption { display: none; }
+    .round { width: 44px; height: 44px; }
+    .ov-img { inset: 64px 0 88px; width: 100%; height: calc(100% - 152px); }
+    .info { left: 0; right: 0; top: auto; bottom: 0; width: auto; max-height: 70vh; border-radius: 22px 22px 0 0; transform: translateY(20px); }
+    .info.open { transform: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header" id="header">
+  <a class="logo" href="?" aria-label="Shots, home"><img src="assets/shots-logo-white.svg" alt="Shots"><span class="logo-glass" aria-hidden="true"></span></a>
+  <div class="header-right">
+    <button class="pill shuffle" id="shuffleBtn" aria-label="Show a random photo (R)" title="Random photo (R)">%shuffle%</button>
+    <nav class="filters" id="filters" aria-label="Filters"></nav>
+    <button class="pill mobile-filter" id="mobileFilterBtn" aria-haspopup="dialog">
+      %filter%
+      <span id="mobileFilterLbl">Filter</span>
+    </button>
+  </div>
+</header>
+
+<main>
+  <section class="stage" id="stage" aria-label="Featured photo">
+    <div class="stage-bg" id="stageBg"></div>
+    <div class="stage-tint" id="stageTint"></div>
+    <img class="stage-img" id="stageImg" alt="">
+    <div class="controls">
+      <div class="group">
+        <button class="round" id="stageDownload" aria-label="Download">%download%</button>
+        <button class="round" id="stageInfo" aria-label="Photo info" aria-pressed="false">%info%</button>
+        <div class="caption"><div class="s" id="stageSub"></div></div>
+      </div>
+      <div class="group">
+        <span class="counter" id="stageCounter"></span>
+        <button class="round" id="stagePrev" aria-label="Previous photo">%prev%</button>
+        <button class="round" id="stageNext" aria-label="Next photo">%next%</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="grid-wrap"><div class="tiles" id="tiles"></div></div>
+  <div class="empty" id="empty" hidden>
+    <div class="t">Nothing matches that combination</div>
+    <div>Try removing a filter.</div>
+    <button class="pill" data-clear-all>Clear all filters</button>
+  </div>
+</main>
+
+<!-- Fullscreen viewer -->
+<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-label="Photo viewer">
+  <div class="ov-glow" id="ovGlow"></div>
+  <img class="ov-img" id="ovImg" alt="">
+  <div class="ov-top">
+    <span class="counter" id="ovCounter"></span>
+    <button class="round" id="ovClose" aria-label="Close viewer (Esc)">%close%</button>
+  </div>
+  <div class="controls">
+    <div class="group">
+      <button class="round" id="ovDownload" aria-label="Download">%download%</button>
+      <button class="round" id="ovInfo" aria-label="Photo info" aria-pressed="false">%info%</button>
+      <div class="caption"><div class="s" id="ovSub"></div></div>
+    </div>
+    <div class="group">
+      <button class="round" id="ovPrev" aria-label="Previous photo">%prev%</button>
+      <button class="round" id="ovNext" aria-label="Next photo">%next%</button>
+    </div>
+  </div>
+</div>
+
+<aside class="info" id="info" aria-label="Photo information">
+  <button class="panel-close" id="infoClose" aria-label="Close info">%close%</button>
+  <div id="infoBody"></div>
+</aside>
+
+<div class="popover" id="popover" role="menu"></div>
+
+<div class="scrim" id="dlScrim">
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlTitle" id="dlDialog"></div>
+</div>
+
+<div class="sheet-scrim" id="sheetScrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Filters"></div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<!-- Your photos (generated, gitignored). If missing, the placeholder set in photos.js is used. -->
+<script src="photos/_data.js?v=4" onerror="void 0"></script>
+<script src="photos.js?v=2"></script>
+<script>
+(() => {
+  // Icons: pixelarticons v2.4.1 (MIT) — https://pixelarticons.com
+  const ICON = {
+    download: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 15v4h-2v-4zm-2 4v2H5v-2zM5 15v4H3v-4zm8-12v14h-2V3z"/><path d="M7 11v2h10v-2zm2 2v2h2v-2zm4 0v2h2v-2z"/><path d="M15 11v2h2v-2z"/></svg>',
+    info: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 2h16v2H4zm0 18h16v2H4zM2 4h2v16H2zm18 0h2v16h-2zm-9 5h2V7h-2zm0 8h2v-6h-2z"/></svg>',
+    prev: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 13v-2h2v2H8Zm2-2V9h2v2h-2Zm0 4v-2h2v2h-2Zm2-6V7h2v2h-2Zm0 8v-2h2v2h-2Zm2-10V5h2v2h-2Zm0 12v-2h2v2h-2Z"/></svg>',
+    next: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 13v-2h-2v2h2Zm-2-2V9h-2v2h2Zm0 4v-2h-2v2h2Zm-2-6V7h-2v2h2Zm0 8v-2h-2v2h2ZM10 7V5H8v2h2Zm0 12v-2H8v2h2Z"/></svg>',
+    close: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 19H5V17H7V19ZM19 19H17V17H19V19ZM9 15V17H7V15H9ZM17 17H15V15H17V17ZM11 15H9V13H11V15ZM15 15H13V13H15V15ZM13 13H11V11H13V13ZM11 11H9V9H11V11ZM15 11H13V9H15V11ZM9 9H7V7H9V9ZM17 9H15V7H17V9ZM7 7H5V5H7V7ZM19 7H17V5H19V7Z"/></svg>',
+    chev: '<svg class="chev" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 16h-2v-2h2v2Zm-2-2H9v-2h2v2Zm4 0h-2v-2h2v2Zm-6-2H7v-2h2v2Zm8 0h-2v-2h2v2ZM7 10H5V8h2v2Zm12 0h-2V8h2v2Z"/></svg>',
+    album: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 4h6v2H4zm0 14h16v2H4zM20 8h2v10h-2zM2 6h2v12H2zm8 0h10v2H10z"/></svg>',
+    location: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 2h10v2H7zM5 4h2v2H5zm14 0h-2v2h2zM7 17h2v2H7zm2 2h2v2H9zm6-2h2v2h-2zm-2 2h2v2h-2zm-2 2h2v2h-2zm-6-7h2v3H5zm12 0h2v3h-2zM3 6h2v8H3zm18 0h-2v8h2zM10 6h4v2h-4zM8 8h2v4H8zm2 4h4v2h-4zm4-4h2v4h-2z"/></svg>',
+    type: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M2 13h9v2H2zm0 2h2v5H2zm0 5h9v2H2zm7-5h2v5H9zm6-2h5v2h-5zm-2 2h2v5h-2zm2 5h5v2h-5zm5-5h2v5h-2zM7 9h10v2H7zm0-2h2v2H7zm2-3h2v3H9zm2-2h2v2h-2zm2 2h2v3h-2zm2 3h2v2h-2z"/></svg>',
+    camera: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5h4v2H4zm4-2h8v2H8zm8 2h4v2h-4zM2 7h2v12H2zm2 12h16v2H4zM20 7h2v12h-2zM10 8h4v2h-4zm0 6h4v2h-4zm-2-4h2v4H8zm6 0h2v4h-2z"/></svg>',
+    year: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 4h14v2H5zm0 16h14v2H5zM3 10h2v10H3zm0-4h2v2H3zm16 0h2v2h-2zm0 4h2v10h-2zM3 8h18v2H3zm12-6h2v2h-2zM7 2h2v2H7z"/></svg>',
+    colour: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M14 2h6v2h-6zm0 18h6v2h-6zM4 20h10v2H4zm8-16h2v16h-2zm8 0h2v16h-2zM2 16h2v4H2zm2-2h8v2H4zm12 2h2v2h-2zM6 12h2v2H6zM4 8h2v4H4zm2-2h4v2H6zm4 2h2v2h-2z"/></svg>',
+    shuffle: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10 19H2v-2h8v2Zm12 0h-8v-2h8v2Zm-10-2h-2v-6h2v6Zm6-10h2v2h2v2h-2v2h-2v2h-2v-4h-4V9h4V5h2v2ZM8 11H2V9h6v2Z"/></svg>',
+    heart: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 22h-2v-2h2v2Zm-2-2H9v-2h2v2Zm4 0h-2v-2h2v2Zm-6-2H7v-2h2v2Zm8 0h-2v-2h2v2ZM7 16H5v-2h2v2Zm12 0h-2v-2h2v2ZM5 14H3v-2h2v2Zm16 0h-2v-2h2v2ZM3 12H1V6h2v6Zm20 0h-2V6h2v6ZM13 8h-2V6h2v2ZM5 6H3V4h2v2Zm6 0H9V4h2v2Zm4 0h-2V4h2v2Zm6 0h-2V4h2v2ZM9 4H5V2h4v2Zm10 0h-4V2h4v2Z"/></svg>',
+    filter: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 14H7v6H5v-6H2v-2h6v2Zm5 6h-2V10h2v10Zm9-2h-3v2h-2v-2h-1v-2h6v2Zm-3-4h-2V4h2v10ZM7 10H5V4h2v6Zm6-4h2v2H9V6h2V4h2v2Z"/></svg>',
+  };
+  // Swap %icon% placeholders in static markup
+  document.querySelectorAll('.round, .panel-close, .mobile-filter, .shuffle').forEach(el => { el.innerHTML = el.innerHTML.replace(/%(\w+)%/g, (m, k) => ICON[k] || m); });
+
+  const $ = (id) => document.getElementById(id);
+  const PHOTOS = window.SHOTS_PHOTOS;
+  const byId = Object.fromEntries(PHOTOS.map(p => [p.id, p]));
+
+  const COLOURS = {
+    red: ['Red', '#c8453a'], orange: ['Orange', '#d9873c'], yellow: ['Yellow', '#d8c25a'],
+    green: ['Green', '#5f9a55'], blue: ['Blue', '#4a7fbf'], purple: ['Purple', '#8a6bb8'],
+    mono: ['Black & white', 'linear-gradient(135deg,#eee 50%,#222 50%)'],
+  };
+  const FACETS = [
+    { key: 'album', label: 'Albums', all: 'All albums', get: p => [p.album] },
+    { key: 'location', label: 'Locations', all: 'All locations', get: p => [].concat(p.location || []) },
+    { key: 'type', label: 'Types', all: 'All types', get: p => p.types || [] },
+    { key: 'camera', label: 'Cameras', all: 'All cameras', get: p => p.camera ? [p.camera] : [] },
+    { key: 'year', label: 'Years', all: 'All years', get: p => [p.year ? String(p.year) : 'Undated'],
+      sort: (a, b) => (a === 'Undated') - (b === 'Undated') || b.localeCompare(a) },
+    { key: 'colour', label: 'Colours', all: 'All colours', get: p => [p.colour],
+      order: Object.keys(COLOURS), name: v => COLOURS[v][0] },
+  ].filter(f => {
+    // Facets with no data (e.g. Types before tagging) are hidden
+    const vals = new Set(PHOTOS.flatMap(f.get));
+    f.values = f.order ? f.order.filter(v => vals.has(v))
+      : [...vals].sort(f.sort || ((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' })));
+    return f.values.length > 0;
+  });
+  const nameOf = (f, v) => f.name ? f.name(v) : v;
+
+  // Display helpers: place falls back to album, year may be missing
+  const places = p => [].concat(p.location || []);
+  const placeOf = p => places(p).join(' & ') || p.album;
+  const subOf = p => [placeOf(p), p.year].filter(Boolean).join(' · ');
+  const PHOTOGRAPHER = window.SHOTS_PHOTOGRAPHER || 'the photographer';
+
+  // ?o= changes when a photo is rotated, so the browser doesn't show a stale cached copy
+  const img = (p, w) => p.src ? (w <= 900 ? p.src.s : p.src.l) + `?o=${p.w > p.h ? 'l' : 'p'}` : `https://picsum.photos/id/${p.id}/${w}/${Math.round(w * p.h / p.w)}`;
+  const fullSrc = p => p.src ? p.src.l : `https://picsum.photos/id/${p.id}/${p.w}/${p.h}`;
+  // Real photos are downloaded as the 2000px web copy in the prototype
+  const fullDims = p => { const k = p.src ? Math.min(1, 2000 / Math.max(p.w, p.h)) : 1; return [Math.round(p.w * k), Math.round(p.h * k)]; };
+  const isTall = p => p.h > p.w;
+
+  // ---------- State ----------
+  const sel = Object.fromEntries(FACETS.map(f => [f.key, new Set()]));
+  let results = PHOTOS, order = [], current = null, overlayOpen = false, infoOpen = false;
+
+  const matches = (p, skip) => FACETS.every(f => f.key === skip || !sel[f.key].size || f.get(p).some(v => sel[f.key].has(v)));
+  const countFor = (f, v) => PHOTOS.filter(p => matches(p, f.key) && f.get(p).includes(v)).length;
+  const activeCount = () => FACETS.reduce((n, f) => n + sel[f.key].size, 0);
+
+  // ---------- URL ----------
+  function readUrl() {
+    const q = new URLSearchParams(location.search);
+    for (const f of FACETS) (q.get(f.key) || '').split(',').filter(v => f.values.includes(v)).forEach(v => sel[f.key].add(v));
+    return q.get('photo');
+  }
+  function writeUrl() {
+    const q = new URLSearchParams();
+    for (const f of FACETS) if (sel[f.key].size) q.set(f.key, [...sel[f.key]].join(','));
+    if (overlayOpen && current) q.set('photo', current);
+    const s = q.toString().replace(/%2C/g, ',');
+    history.replaceState(null, '', s ? '?' + s : location.pathname);
+  }
+
+  // ---------- Filters (desktop pills) ----------
+  let openFacet = null;
+  function pillLabel(f) {
+    const s = [...sel[f.key]];
+    if (!s.length) return f.all;
+    if (s.length === 1) return nameOf(f, s[0]);
+    return `${f.label} · ${s.length}`;
+  }
+  function renderPills() {
+    const nav = $('filters');
+    nav.innerHTML = FACETS.map(f => `
+      <button class="pill${sel[f.key].size ? ' active' : ''}" data-facet="${f.key}" aria-haspopup="menu" aria-expanded="${openFacet === f.key}">
+        ${ICON[f.key]}<span>${pillLabel(f)}</span>${ICON.chev}
+      </button>`).join('') + `<span class="result-count" aria-live="polite">(${results.length})</span>`
+      + (activeCount() ? '<button class="clear-all" data-clear-all>Clear all</button>' : '');
+    const n = activeCount();
+    // e.g. "2 filters (10)" — number of shots matching in brackets
+    $('mobileFilterLbl').innerHTML = `${n ? `${n} filter${n === 1 ? '' : 's'}` : 'Filters'} <span class="n">(${results.length})</span>`;
+    $('mobileFilterBtn').classList.toggle('active', !!n);
+  }
+  function optionsHtml(f) {
+    return f.values.map(v => {
+      const c = countFor(f, v), on = sel[f.key].has(v);
+      const sw = f.key === 'colour' ? `<span class="swatch" style="background:${COLOURS[v][1]}"></span>` : '';
+      return `<button class="opt" role="menuitemcheckbox" aria-checked="${on}" data-facet="${f.key}" data-value="${v}" ${!c && !on ? 'disabled' : ''}>
+        <span class="box"></span>${sw}<span class="name">${nameOf(f, v)}</span><span class="count">${c}</span></button>`;
+    }).join('');
+  }
+  function renderPopover() {
+    const pop = $('popover');
+    if (!openFacet) { pop.classList.remove('open'); return; }
+    const f = FACETS.find(x => x.key === openFacet);
+    pop.innerHTML = optionsHtml(f) + (sel[f.key].size ? `<div class="pop-foot"><button class="text-btn" data-clear="${f.key}">Clear ${f.label.toLowerCase()}</button></div>` : '');
+    const btn = document.querySelector(`.filters .pill[data-facet="${openFacet}"]`);
+    if (!btn) return;
+    const r = btn.getBoundingClientRect();
+    pop.style.top = (r.bottom + 8) + 'px';
+    pop.style.left = Math.max(12, Math.min(r.left, innerWidth - pop.offsetWidth - 12)) + 'px';
+    pop.classList.add('open');
+  }
+  function toggleFacet(key) {
+    openFacet = openFacet === key ? null : key;
+    renderPills(); renderPopover();
+    if (openFacet) $('popover').querySelector('.opt:not(:disabled)')?.focus();
+  }
+
+  // ---------- Mobile sheet ----------
+  function renderSheet() {
+    const n = results.length;
+    $('sheet').innerHTML = `<div class="grabber"></div>` + FACETS.map(f => `
+      <h3>${f.label}</h3><div class="chips">${f.values.map(v => {
+        const c = countFor(f, v), on = sel[f.key].has(v);
+        const sw = f.key === 'colour' ? `<span class="swatch" style="background:${COLOURS[v][1]}"></span>` : '';
+        return `<button class="chip" aria-pressed="${on}" data-facet="${f.key}" data-value="${v}" ${!c && !on ? 'disabled' : ''}>${sw}${nameOf(f, v)} <span class="count">${c}</span></button>`;
+      }).join('')}</div>`).join('') + `
+      <div class="sheet-foot">
+        <button class="btn ghost" data-clear-all>Clear all</button>
+        <button class="btn" id="sheetDone">Show ${n} photo${n === 1 ? '' : 's'}</button>
+      </div>`;
+  }
+  const openSheet = (o) => { renderSheet(); $('sheet').classList.toggle('open', o); $('sheetScrim').classList.toggle('open', o); };
+
+  // ---------- Apply ----------
+  function apply({ keepCurrent = false } = {}) {
+    results = PHOTOS.filter(p => matches(p));
+    if (!keepCurrent || !results.some(p => p.id === current)) current = results[0]?.id ?? null;
+    renderPills(); renderPopover(); renderGrid();
+    if ($('sheet').classList.contains('open')) renderSheet();
+    renderCurrent();
+    writeUrl();
+  }
+  function toggleValue(key, v) {
+    sel[key].has(v) ? sel[key].delete(v) : sel[key].add(v);
+    apply();
+  }
+  function clearAll() { FACETS.forEach(f => sel[f.key].clear()); apply(); }
+
+  // ---------- Grid ----------
+  function renderGrid() {
+    const t = $('tiles');
+    $('empty').hidden = !!results.length;
+    t.innerHTML = results.map(p => `
+      <button class="tile${isTall(p) ? ' tall' : ''}" data-id="${p.id}" aria-label="${p.title}, ${subOf(p)}">
+        <img src="${img(p, isTall(p) ? 700 : 900)}" alt="" loading="lazy" onload="this.classList.add('ready')" style="background:${p.tint}">
+        <span class="meta"><div class="s">${subOf(p)}</div></span>
+      </button>`).join('');
+    computeOrder();
+  }
+  // Navigation follows visual order (dense packing can reorder tiles)
+  function computeOrder() {
+    order = [...$('tiles').children]
+      .map(el => ({ id: el.dataset.id, top: el.offsetTop, left: el.offsetLeft }))
+      .sort((a, b) => a.top - b.top || a.left - b.left).map(x => x.id);
+  }
+
+  // ---------- Current photo (stage + overlay) ----------
+  function setImg(el, src) {
+    if (el.getAttribute('src') === src) return;
+    el.classList.add('loading');
+    const pre = new Image();
+    pre.onload = () => { el.src = src; el.classList.remove('loading'); };
+    pre.src = src;
+  }
+  function renderCurrent() {
+    const p = byId[current];
+    document.querySelectorAll('.tile.current').forEach(el => el.classList.remove('current'));
+    if (!p) return;
+    document.querySelector(`.tile[data-id="${p.id}"]`)?.classList.add('current');
+    const i = order.indexOf(p.id) + 1, count = `${String(i).padStart(2, '0')} / ${String(order.length).padStart(2, '0')}`;
+    const sub = subOf(p);
+    setImg($('stageImg'), img(p, 2000));
+    $('stageImg').alt = `${p.title}, ${sub}`; // title: accessible name only, never shown
+    $('stageBg').style.backgroundImage = `url(${img(p, 400)})`;
+    $('stageTint').style.background = p.tint;
+    $('stageSub').textContent = sub; $('stageCounter').textContent = count;
+    if (overlayOpen) {
+      setImg($('ovImg'), img(p, 2400));
+      $('ovImg').alt = `${p.title}, ${sub}`;
+      $('ovGlow').style.background = `radial-gradient(60% 60% at 50% 50%, ${p.tint}, transparent)`;
+      $('ovSub').textContent = sub; $('ovCounter').textContent = count;
+      // preload neighbours
+      [-1, 1].forEach(d => { const n = byId[order[(order.indexOf(p.id) + d + order.length) % order.length]]; if (n) new Image().src = img(n, 2400); });
+    }
+    if (infoOpen) renderInfo();
+  }
+  function step(d) {
+    if (!order.length) return;
+    const i = order.indexOf(current);
+    current = order[(i + d + order.length) % order.length];
+    renderCurrent(); if (overlayOpen) writeUrl();
+  }
+  function openOverlay(id) {
+    if (id) current = id;
+    overlayOpen = true;
+    $('overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    renderCurrent(); writeUrl();
+    $('ovClose').focus();
+  }
+  function closeOverlay() {
+    overlayOpen = false;
+    $('overlay').classList.remove('open');
+    document.body.style.overflow = '';
+    writeUrl();
+    document.querySelector(`.tile[data-id="${current}"]`)?.focus({ preventScroll: true });
+  }
+
+  // ---------- Info panel ----------
+  function chip(facet, v, label) { return `<button class="chip" data-filter-to="${facet}" data-value="${v}" title="Show all ${label}">${label}</button>`; }
+  function renderInfo() {
+    const p = byId[current]; if (!p) return;
+    const [cName, cSw] = COLOURS[p.colour];
+    $('infoBody').innerHTML = `
+      <h2>${placeOf(p)}</h2>
+      <div class="sub">${p.year || 'Undated'}</div>
+      <dl>
+        <dt>Album</dt><dd>${chip('album', p.album, p.album)}</dd>
+        ${places(p).length ? `<dt>Location</dt><dd>${places(p).map(l => chip('location', l, l)).join('')}</dd>` : ''}
+        ${(p.types || []).length ? `<dt>Type</dt><dd>${p.types.map(t => chip('type', t, t)).join('')}</dd>` : ''}
+        ${p.camera ? `<dt>Camera</dt><dd>${chip('camera', p.camera, p.camera)}</dd>` : ''}
+        ${p.year ? `<dt>Year</dt><dd>${chip('year', String(p.year), p.year)}</dd>` : ''}
+        <dt>Colour</dt><dd><button class="chip" data-filter-to="colour" data-value="${p.colour}"><span class="swatch" style="background:${cSw}"></span>${cName}</button></dd>
+        <dt>Size</dt><dd class="plain">${p.w.toLocaleString()} × ${p.h.toLocaleString()} px</dd>
+      </dl>
+      <div class="hint">Tap a tag to see everything else that shares it.</div>`;
+  }
+  function setInfo(o) {
+    infoOpen = o;
+    if (o) renderInfo();
+    $('info').classList.toggle('open', o);
+    ['stageInfo', 'ovInfo'].forEach(id => $(id).setAttribute('aria-pressed', o));
+  }
+
+  // ---------- Download dialog ----------
+  let lastFocus = null;
+  function openDownload() {
+    const p = byId[current]; if (!p) return;
+    lastFocus = document.activeElement;
+    const credit = `Photo by ${p.author || PHOTOGRAPHER}, ${[placeOf(p), p.year].filter(Boolean).join(' ')}. Via Shots. CC BY 4.0`;
+    const [dw, dh] = fullDims(p);
+    $('dlDialog').innerHTML = `
+      <button class="panel-close" data-close-dl aria-label="Close">${ICON.close}</button>
+      <div class="dl-head">
+        <img src="${img(p, 300)}" alt="">
+        <div><h2 id="dlTitle">Download</h2><p>${[placeOf(p), p.year].filter(Boolean).join(', ')}<br>Full resolution · ${dw.toLocaleString()} × ${dh.toLocaleString()} · uncropped</p></div>
+      </div>
+      <a class="btn" href="${fullSrc(p)}" target="_blank" rel="noopener" download>${ICON.download} Download free</a>
+      <div class="section">
+        <h3>Using this photo?</h3>
+        <p>Please credit it. Copy this line wherever it appears.</p>
+        <div class="credit"><code id="creditText">${credit}</code><button class="btn ghost" id="copyCredit">Copy</button></div>
+        <div class="licence">Licence: CC BY 4.0 (placeholder, still to be confirmed)</div>
+      </div>
+      <div class="section">
+        <h3>Support the work</h3>
+        <p>Downloads are free and always will be. If this photo is useful to you, a small donation keeps the camera loaded.</p>
+        <a class="btn ghost" href="#" id="donate">${ICON.heart} Donate</a>
+      </div>`;
+    $('dlScrim').classList.add('open');
+    $('dlDialog').querySelector('.btn').focus();
+  }
+  function closeDownload() { $('dlScrim').classList.remove('open'); lastFocus?.focus?.(); }
+
+  let toastT;
+  function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 1800); }
+
+  // ---------- Events ----------
+  document.addEventListener('click', (e) => {
+    const t = e.target.closest('button, a');
+    if (!t) {
+      if (openFacet && !e.target.closest('#popover')) { openFacet = null; renderPills(); renderPopover(); }
+      return;
+    }
+    if (t.dataset.facet && t.closest('#filters')) return toggleFacet(t.dataset.facet);
+    if (t.matches('.opt, .chips .chip')) return toggleValue(t.dataset.facet, t.dataset.value);
+    if (t.dataset.clear) { sel[t.dataset.clear].clear(); return apply(); }
+    if ('clearAll' in t.dataset) { openFacet = null; return clearAll(); }
+    if (t.dataset.filterTo) {
+      FACETS.forEach(f => sel[f.key].clear());
+      sel[t.dataset.filterTo].add(t.dataset.value);
+      setInfo(false); if (overlayOpen) closeOverlay();
+      apply(); scrollTo({ top: 0 });
+      return toast(`Showing ${results.length} shots`);
+    }
+    if (t.classList.contains('tile')) return openOverlay(t.dataset.id);
+    if ('closeDl' in t.dataset) return closeDownload();
+    if (t.id === 'copyCredit') {
+      navigator.clipboard?.writeText($('creditText').textContent).then(() => toast('Credit copied'), () => toast('Select the text to copy'));
+      t.textContent = 'Copied'; return;
+    }
+    if (t.id === 'donate') { e.preventDefault(); return toast('Donation link (Ko-fi / Stripe) goes here'); }
+    if (t.id === 'sheetDone') return openSheet(false);
+    if (openFacet && !t.closest('#popover')) { openFacet = null; renderPills(); renderPopover(); }
+  });
+  $('stageImg').addEventListener('click', () => openOverlay());
+  $('stagePrev').onclick = () => step(-1);
+  $('stageNext').onclick = () => step(1);
+  $('ovPrev').onclick = () => step(-1);
+  $('ovNext').onclick = () => step(1);
+  $('ovClose').onclick = closeOverlay;
+  $('stageDownload').onclick = $('ovDownload').onclick = openDownload;
+  $('stageInfo').onclick = $('ovInfo').onclick = () => setInfo(!infoOpen);
+  $('infoClose').onclick = () => setInfo(false);
+  $('dlScrim').addEventListener('click', e => { if (e.target === $('dlScrim')) closeDownload(); });
+  $('mobileFilterBtn').onclick = () => openSheet(true);
+  $('shuffleBtn').onclick = shuffle;
+
+  // Random photo from the current filtered results (never the one already showing)
+  function shuffle() {
+    const pool = results.filter(p => p.id !== current);
+    if (!pool.length) return toast('Only one photo matches these filters');
+    current = pool[Math.floor(Math.random() * pool.length)].id;
+    renderCurrent();
+    if (overlayOpen) writeUrl();
+    else if (scrollY > 0) scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  $('sheetScrim').onclick = () => openSheet(false);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey || e.target.matches?.('input, textarea')) return;
+    if (e.key === 'Escape') {
+      if ($('dlScrim').classList.contains('open')) return closeDownload();
+      if (openFacet) { const k = openFacet; openFacet = null; renderPills(); renderPopover(); return document.querySelector(`.pill[data-facet="${k}"]`)?.focus(); }
+      if ($('sheet').classList.contains('open')) return openSheet(false);
+      if (infoOpen) return setInfo(false);
+      if (overlayOpen) return closeOverlay();
+      return;
+    }
+    if ($('dlScrim').classList.contains('open') || openFacet) {
+      if (openFacet && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+        const opts = [...$('popover').querySelectorAll('.opt:not(:disabled)')];
+        const i = opts.indexOf(document.activeElement);
+        opts[(i + (e.key === 'ArrowDown' ? 1 : -1) + opts.length) % opts.length]?.focus();
+        e.preventDefault();
+      }
+      return;
+    }
+    if (e.key === 'ArrowLeft') { step(-1); e.preventDefault(); }
+    else if (e.key === 'ArrowRight') { step(1); e.preventDefault(); }
+    else if (e.key === 'i') setInfo(!infoOpen);
+    else if (e.key === 'r') shuffle();
+    else if (e.key === 'd') openDownload();
+    else if (e.key === 'f' || (e.key === 'Enter' && !overlayOpen && e.target === document.body)) overlayOpen ? closeOverlay() : openOverlay();
+  });
+
+  // Swipe in the fullscreen viewer
+  let sx = null;
+  $('overlay').addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, { passive: true });
+  $('overlay').addEventListener('touchend', e => {
+    if (sx === null) return;
+    const dx = e.changedTouches[0].clientX - sx; sx = null;
+    if (Math.abs(dx) > 50) step(dx < 0 ? 1 : -1);
+  });
+
+  addEventListener('resize', () => { computeOrder(); renderCurrent(); if (openFacet) renderPopover(); updateLogo(); });
+
+  // Logo is white only while the hero is behind it
+  function updateLogo() {
+    const logo = document.querySelector('.logo').getBoundingClientRect();
+    $('header').classList.toggle('over-grid', $('stage').getBoundingClientRect().bottom < logo.bottom);
+  }
+  addEventListener('scroll', updateLogo, { passive: true });
+  updateLogo();
+
+  // ---------- Boot ----------
+  const startPhoto = readUrl();
+  apply();
+  if (startPhoto && byId[startPhoto] && results.some(p => p.id === startPhoto)) openOverlay(startPhoto);
+})();
+</script>
+</body>
+</html>

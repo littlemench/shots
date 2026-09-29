@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shots — Wordmark easter eggs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500&family=Geist+Mono:wght@400;500&family=Instrument+Serif&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0b0a; --panel: #141413; --panel-2: #1b1b19;
+    --text: #f3f1ec; --muted: rgba(243,241,236,.58); --faint: rgba(243,241,236,.3);
+    --accent: #e9a23b; /* the one colour moment: AF-confirm / film-edge amber */
+    --sans: "Geist", system-ui, sans-serif; --mono: "Geist Mono", ui-monospace, monospace; --serif: "Instrument Serif", Georgia, serif;
+    --ease: cubic-bezier(.2,.7,.2,1);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 400 15px/1.55 var(--sans); -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 56px 24px 96px; }
+  .eyebrow { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  h1 { font: 400 clamp(40px, 6vw, 68px)/1 var(--serif); margin: 10px 0 18px; }
+  .intro { max-width: 700px; color: var(--muted); }
+  .intro strong { color: var(--text); font-weight: 500; }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 20px; margin: 28px 0 8px; align-items: center; }
+  .seg { display: inline-flex; padding: 3px; border-radius: 999px; background: rgba(255,255,255,.07); }
+  .seg button { font: inherit; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); background: none; border: 0; padding: 7px 14px; border-radius: 999px; cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--text); color: var(--bg); }
+  .controls label { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); margin-right: 8px; }
+
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-top: 24px; }
+  .card { border-radius: 16px; background: var(--panel); overflow: hidden; display: flex; flex-direction: column; }
+  .stage { position: relative; min-height: 250px; display: grid; place-items: center; padding: 40px 28px; cursor: crosshair; }
+  .stage .hint { position: absolute; top: 12px; right: 14px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); transition: opacity .2s; }
+  .stage:hover .hint { opacity: 0; }
+  .stage svg { max-width: 100%; height: auto; overflow: visible; }
+  .num { position: absolute; top: 12px; left: 14px; font: 400 12px var(--mono); color: var(--faint); }
+  .strip { display: grid; grid-template-columns: 1.6fr 1fr 1fr; gap: 2px; background: var(--bg); }
+  .strip > div { background: var(--panel-2); min-height: 96px; display: grid; place-items: center; position: relative; }
+  .strip .photo { background: #333 center/cover; }
+  .strip .photo::before { content: ""; position: absolute; inset: 0; background: linear-gradient(rgba(0,0,0,.45), transparent 70%); }
+  .strip .photo .in { position: absolute; top: 14px; left: 16px; color: #fff; }
+  .strip .light { background: #efece6; color: #121211; }
+  .strip .fav { display: flex; gap: 10px; align-items: center; justify-content: center; }
+  .strip .fav span { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 8px; background: #000; color: #fff; }
+  .strip .fav span.s { width: 16px; height: 16px; border-radius: 4px; }
+  .strip small { position: absolute; bottom: 6px; left: 8px; font: 400 10px var(--mono); color: var(--faint); }
+  .strip .light small { color: rgba(0,0,0,.35); }
+  .body { padding: 18px 20px 22px; }
+  .body h2 { font: 400 28px/1.1 var(--serif); margin: 0 0 6px; }
+  .body p { margin: 0 0 8px; color: var(--muted); font-size: 14px; }
+  .body p b { color: var(--text); font-weight: 500; }
+
+  /* ---- Easter-egg hover behaviours ---- */
+  .egg { transition: opacity .35s var(--ease), transform .45s var(--ease), fill .2s, stroke .2s; transform-box: fill-box; transform-origin: center; }
+  /* 1 Focus: AF point confirms */
+  .card:hover .egg-focus { fill: var(--accent); animation: af .5s steps(1) 2; }
+  @keyframes af { 50% { opacity: 0; } }
+  /* 2 Stopped down: the aperture closes */
+  .egg-hex { transform: scale(1); }
+  .card:hover .egg-hex { transform: scale(.55) rotate(30deg); stroke: var(--accent); }
+  /* 3 Crop marks: they tighten in */
+  .egg-crop { opacity: .55; }
+  .card:hover .egg-crop { opacity: 1; }
+  .card:hover .egg-crop.tl { transform: translate(6%, 12%); }
+  .card:hover .egg-crop.tr { transform: translate(-6%, 12%); }
+  .card:hover .egg-crop.bl { transform: translate(6%, -12%); }
+  .card:hover .egg-crop.br { transform: translate(-6%, -12%); }
+  /* 4 Frame counter: advances */
+  .egg-count { fill: var(--muted); }
+  .card:hover .egg-count { fill: var(--accent); }
+  /* 5 Pixel S: pixels scatter slightly */
+  .card:hover .egg-px rect { fill: var(--accent); }
+  /* 6 Full stop: flash */
+  .card:hover .egg-stop { fill: var(--accent); animation: flash .6s var(--ease); }
+  @keyframes flash { 0% { filter: drop-shadow(0 0 0 var(--accent)); } 30% { filter: drop-shadow(0 0 14px var(--accent)); } 100% { filter: none; } }
+  /* 7 Ghost: long exposure trail */
+  .egg-ghost { opacity: 0; }
+  .card:hover .egg-ghost { opacity: .18; }
+  .card:hover .egg-ghost.g2 { opacity: .08; }
+
+  .rec { margin-top: 64px; border-radius: 18px; background: var(--panel-2); padding: 32px; }
+  .rec h2 { font: 400 36px/1.05 var(--serif); margin: 0 0 12px; }
+  .rec p, .rec li { color: var(--muted); }
+  .rec strong { color: var(--text); font-weight: 500; }
+
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } .strip { grid-template-columns: 1fr 1fr; } .strip .photo { grid-column: 1 / -1; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Shots · Brand exploration · v0.2</div>
+  <h1>A wordmark with a secret</h1>
+  <p class="intro">
+    No separate logo. Just the name, set quietly, with <strong>one small photographic reference built into the letters</strong>.
+    Most people will only read "Shots", and the few who look closer find the detail. <strong>Hover over each one</strong> to see its easter egg come alive.
+    The detail can double as the favicon, so there's no need for a separate mark.
+  </p>
+
+  <div class="controls">
+    <div><label>Case</label><span class="seg" id="caseSeg"><button data-v="upper" aria-pressed="true">SHOTS</button><button data-v="title" aria-pressed="false">Shots</button><button data-v="lower" aria-pressed="false">shots</button></span></div>
+    <div><label>Weight</label><span class="seg" id="weightSeg"><button data-v="300" aria-pressed="true">Light</button><button data-v="400" aria-pressed="false">Regular</button><button data-v="500" aria-pressed="false">Medium</button></span></div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <section class="rec">
+    <div class="eyebrow">First take</div>
+    <h2>Focus point, with Full stop as the serif alternative</h2>
+    <p>
+      <strong>01 Focus</strong> is the most "hidden in plain sight": a single square in the O, the exact mark a camera shows when it has locked focus.
+      It's the same shape as a pixel from the icon set, it works in any case or weight, and the O on its own makes a strong favicon.
+      On the site, that square could blink amber for a moment when a photo opens: a small, private joke.
+    </p>
+    <p>
+      <strong>06 Full stop</strong> is the editorial version of the same thought: the full stop is a single pixel, the smallest possible shot.
+      <strong>02 Stopped down</strong> is the cleverest, but also the most likely to read as a logo rather than a letter.
+    </p>
+  </section>
+</div>
+
+<script>
+  const PHOTOS = [57, 18, 67, 129, 88, 204, 184];
+  const state = { case: 'upper', weight: 300 };
+  const tx = (s) => state.case === 'upper' ? s.toUpperCase() : state.case === 'lower' ? s.toLowerCase() : s[0].toUpperCase() + s.slice(1).toLowerCase();
+
+  // ---------- Measuring glyphs so eggs land exactly on letters ----------
+  const cv = document.createElement('canvas').getContext('2d');
+  function layout(text, { family, weight, size, tracking }) {
+    cv.font = `${weight} ${size}px "${family}"`;
+    const tr = tracking * size, glyphs = [];
+    for (let i = 0; i < text.length; i++) {
+      const x = cv.measureText(text.slice(0, i)).width + i * tr, m = cv.measureText(text[i]);
+      glyphs.push({ ch: text[i], x, adv: m.width, l: x - m.actualBoundingBoxLeft, r: x + m.actualBoundingBoxRight, t: -m.actualBoundingBoxAscent, b: m.actualBoundingBoxDescent });
+    }
+    const I = cv.measureText('I'), stem = I.actualBoundingBoxLeft + I.actualBoundingBoxRight;
+    const capH = cv.measureText('H').actualBoundingBoxAscent;
+    const ink = { l: Math.min(...glyphs.map(g => g.l)), r: Math.max(...glyphs.map(g => g.r)), t: Math.min(...glyphs.map(g => g.t)), b: Math.max(...glyphs.map(g => g.b)) };
+    return { glyphs, stem, capH, ink, size, family, weight };
+  }
+  function render(text, font, eggs = [], { skip = [] } = {}) {
+    const L = layout(text, font);
+    let body = L.glyphs.map((g, i) => skip.includes(i) ? '' :
+      `<text x="${g.x.toFixed(2)}" y="0" font-family="${font.family}" font-weight="${font.weight}" font-size="${font.size}">${g.ch}</text>`).join('');
+    let bb = { ...L.ink };
+    for (const egg of eggs) {
+      const out = egg(L); body += out.svg;
+      if (out.bounds) bb = { l: Math.min(bb.l, out.bounds.l), r: Math.max(bb.r, out.bounds.r), t: Math.min(bb.t, out.bounds.t), b: Math.max(bb.b, out.bounds.b) };
+    }
+    const p = font.size * .06, w = bb.r - bb.l + 2 * p, h = bb.b - bb.t + 2 * p;
+    return `<svg viewBox="${(bb.l - p).toFixed(2)} ${(bb.t - p).toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)}" width="${w.toFixed(0)}" height="${h.toFixed(0)}" fill="currentColor" role="img" aria-label="Shots">${body}</svg>`;
+  }
+  const findO = L => L.glyphs.find(g => /o/i.test(g.ch));
+  const centreOf = g => [(g.l + g.r) / 2, (g.t + g.b) / 2];
+
+  // ---------- Eggs ----------
+  const eggFocus = L => { // AF point in the O
+    const g = findO(L); if (!g) return { svg: '' };
+    const [cx, cy] = centreOf(g), counter = (g.r - g.l) - 2 * L.stem, s = Math.min(Math.max(L.stem * 1.7, L.size * .05), counter * .38);
+    return { svg: `<rect class="egg egg-focus" x="${cx - s / 2}" y="${cy - s / 2}" width="${s}" height="${s}"/>` };
+  };
+  const eggHex = L => { // aperture blades closing in the O
+    const g = findO(L); if (!g) return { svg: '' };
+    const [cx, cy] = centreOf(g), rIn = (g.r - g.l) / 2 - L.stem, r = rIn * .55;
+    const pts = [...Array(6)].map((_, i) => { const a = Math.PI / 3 * i + Math.PI / 6; return `${(cx + r * Math.cos(a)).toFixed(2)},${(cy + r * Math.sin(a)).toFixed(2)}`; }).join(' ');
+    return { svg: `<polygon class="egg egg-hex" points="${pts}" fill="none" stroke="currentColor" stroke-width="${(L.stem * .8).toFixed(2)}" stroke-linejoin="round"/>` };
+  };
+  const eggCrop = L => { // printer's crop marks around the word
+    const { l, r, t, b } = L.ink, o = L.capH * .32, len = L.capH * .28, sw = Math.max(1, L.stem * .55);
+    const mk = (x, y, dx, dy, cls) => `<path class="egg egg-crop ${cls}" d="M${x + dx * len} ${y}H${x}V${y + dy * len}" fill="none" stroke="currentColor" stroke-width="${sw}"/>`;
+    return {
+      svg: mk(l - o, t - o, 1, 1, 'tl') + mk(r + o, t - o, -1, 1, 'tr') + mk(l - o, b + o, 1, -1, 'bl') + mk(r + o, b + o, -1, -1, 'br'),
+      bounds: { l: l - o - sw, r: r + o + sw, t: t - o - sw, b: b + o + sw },
+    };
+  };
+  const eggCount = L => { // frame counter, live count of photos in the gallery
+    const fs = L.size * .26, x = L.ink.r + L.size * .1, y = L.ink.t + fs * .8;
+    return {
+      svg: `<text class="egg egg-count" x="${x}" y="${y}" font-family="Geist Mono" font-weight="500" font-size="${fs}" letter-spacing="${fs * .08}">43</text>`,
+      bounds: { l: x, r: x + fs * 1.4, t: L.ink.t, b: y },
+    };
+  };
+  const eggPixelS = L => { // the last S, captured as pixels
+    const G = ['.####', '#....', '#....', '.###.', '....#', '....#', '####.'];
+    const g = L.glyphs[L.glyphs.length - 1], px = L.capH / 7, w = px * 5, x0 = g.x + (g.adv - w) / 2, y0 = -L.capH;
+    let rects = '';
+    G.forEach((row, y) => [...row].forEach((c, x) => { if (c === '#') rects += `<rect x="${(x0 + x * px).toFixed(2)}" y="${(y0 + y * px).toFixed(2)}" width="${px.toFixed(2)}" height="${px.toFixed(2)}"/>`; }));
+    return { svg: `<g class="egg egg-px" shape-rendering="crispEdges">${rects}</g>`, bounds: { l: x0, r: x0 + w, t: y0, b: 0 } };
+  };
+  const eggStop = L => { // a single-pixel full stop
+    const last = L.glyphs[L.glyphs.length - 1], s = L.size * .085, x = last.r + L.size * .045;
+    return { svg: `<rect class="egg egg-stop" x="${x}" y="${-s}" width="${s}" height="${s}"/>`, bounds: { l: x, r: x + s, t: -s, b: 0 } };
+  };
+  const eggGhost = (text, font) => L => { // long-exposure trail on hover
+    const d = L.size * .06;
+    const ghost = (k, cls) => L.glyphs.map(g => `<text class="egg egg-ghost ${cls}" x="${(g.x + d * k).toFixed(2)}" y="0" font-family="${font.family}" font-weight="${font.weight}" font-size="${font.size}">${g.ch}</text>`).join('');
+    return { svg: ghost(1, 'g1') + ghost(2, 'g2'), bounds: { l: L.ink.l, r: L.ink.r + d * 2, t: L.ink.t, b: L.ink.b } };
+  };
+
+  // ---------- Routes ----------
+  const sans = (size) => ({ family: 'Geist', weight: state.weight, size, tracking: state.case === 'upper' ? .36 : .02 });
+  const serif = (size) => ({ family: 'Instrument Serif', weight: 400, size, tracking: -.01 });
+
+  const ROUTES = [
+    { name: 'Focus', what: 'A single square sits in the counter of the O: the <b>autofocus point</b> a camera shows when focus locks. On hover it blinks amber, like focus confirming.',
+      build: s => render(tx('Shots'), sans(s), [eggFocus]), fav: s => render(tx('O'), sans(s), [eggFocus]) },
+    { name: 'Stopped down', what: 'A hexagon inside the O: the <b>aperture blades</b>. Hover and the lens stops down: the blades rotate and close.',
+      build: s => render(tx('Shots'), sans(s), [eggHex]), fav: s => render(tx('O'), sans(s), [eggHex]) },
+    { name: 'Crop marks', what: 'Faint <b>printer\'s crop marks</b> around the word, as if on a contact sheet or a print. Hover and they tighten in: the crop.',
+      build: s => render(tx('Shots'), sans(s), [eggCrop]), fav: s => render(tx('S'), sans(s), [eggCrop]) },
+    { name: 'Frame count', what: 'A tiny <b>frame counter</b> in the corner, like the window on a film camera. It\'s live: it shows how many shots are in the gallery.',
+      build: s => render(tx('Shots'), sans(s), [eggCount]), fav: s => render(tx('S'), sans(s), [eggCount]) },
+    { name: 'Captured', what: 'The final S is drawn in <b>pixels</b>, as if it has just been captured by the sensor. Links the name to the pixel icon set.',
+      build: s => { const t = tx('Shots'); return render(t, sans(s), [eggPixelS], { skip: [t.length - 1] }); },
+      fav: s => render('S', sans(s), [eggPixelS], { skip: [0] }) },
+    { name: 'Full stop', what: '"Shots." in serif, where the full stop is <b>one square pixel</b>, the smallest possible shot. Hover: it flashes.',
+      build: s => render('Shots', serif(s * 1.5), [eggStop]), fav: s => render('S', serif(s * 1.5), [eggStop]), fixedCase: true },
+    { name: 'Long exposure', what: 'Looks completely plain, until you hover: a faint <b>motion trail</b> appears behind the letters, like a slow shutter.',
+      build: s => { const f = sans(s); return render(tx('Shots'), f, [eggGhost(tx('Shots'), f)]); }, fav: s => render(tx('S'), sans(s), []) },
+  ];
+
+  function draw() {
+    document.getElementById('grid').innerHTML = ROUTES.map((r, i) => `
+      <article class="card">
+        <div class="stage"><span class="num">${String(i + 1).padStart(2, '0')}</span><span class="hint">Hover</span>${r.build(64)}</div>
+        <div class="strip">
+          <div class="photo" style="background-image:url(https://picsum.photos/id/${PHOTOS[i]}/900/400)"><div class="in">${r.build(18)}</div><small style="color:rgba(255,255,255,.5)">Header</small></div>
+          <div class="light">${r.build(26)}<small>Light</small></div>
+          <div class="fav"><span>${r.fav(22)}</span><span class="s">${r.fav(11)}</span><small>Favicon</small></div>
+        </div>
+        <div class="body"><h2>${String(i + 1).padStart(2, '0')} ${r.name}</h2><p>${r.what}</p>${r.fixedCase ? '<p style="color:var(--faint)">Serif route: case and weight controls don\'t apply.</p>' : ''}</div>
+      </article>`).join('');
+    // favicons: scale the svg to fit its chip
+    document.querySelectorAll('.fav span svg').forEach(s => { s.removeAttribute('width'); s.style.height = '70%'; s.style.width = 'auto'; });
+  }
+
+  function seg(id, key, parse = v => v) {
+    document.getElementById(id).addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      state[key] = parse(b.dataset.v);
+      e.currentTarget.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+      draw();
+    });
+  }
+  seg('caseSeg', 'case'); seg('weightSeg', 'weight', Number);
+
+  Promise.all(['300', '400', '500'].map(w => document.fonts.load(`${w} 64px Geist`)).concat([
+    document.fonts.load('500 20px "Geist Mono"'), document.fonts.load('400 64px "Instrument Serif"'),
+  ])).then(draw);
+</script>
+</body>
+</html>

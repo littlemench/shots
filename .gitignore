@@ -1,0 +1,6 @@
+.DS_Store
+# Personal photos and generated web copies (see design/brief.md)
+design/sample-photos/
+design/prototype/photos/
+# Third-party screenshots used as private design references
+design/references/

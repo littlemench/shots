@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shots — Typeset wordmark</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500&family=Geist+Mono:wght@400&family=Instrument+Serif&display=swap" rel="stylesheet">
+<style>
+  /* Galgo (Medium only), SIL Open Font License, see ../fonts/galgo-condensed/README.md */
+  /* BL Melody: PERSONAL USE ONLY, exploration only (see ../fonts/bl-melody/README.md) */
+  @font-face { font-family: "BL Melody"; src: url("../fonts/bl-melody/BLMelody-ExtraLight.otf") format("opentype"); font-weight: 200; font-display: block; }
+  @font-face { font-family: "BL Melody"; src: url("../fonts/bl-melody/BLMelody-Light.otf") format("opentype"); font-weight: 300; font-display: block; }
+  @font-face { font-family: "BL Melody"; src: url("../fonts/bl-melody/BLMelody-Book.otf") format("opentype"); font-weight: 400; font-display: block; }
+  @font-face { font-family: "BL Melody"; src: url("../fonts/bl-melody/BLMelody-Regular.otf") format("opentype"); font-weight: 450; font-display: block; }
+  @font-face { font-family: "BL Melody"; src: url("../fonts/bl-melody/BLMelody-Medium.otf") format("opentype"); font-weight: 500; font-display: block; }
+  @font-face { font-family: "BL Melody"; src: url("../fonts/bl-melody/BLMelody-SemiBold.otf") format("opentype"); font-weight: 600; font-display: block; }
+  @font-face { font-family: "BL Melody"; src: url("../fonts/bl-melody/BLMelody-Bold.otf") format("opentype"); font-weight: 700; font-display: block; }
+  @font-face { font-family: "Galgo"; src: url("../fonts/galgo-condensed/galgo.otf") format("opentype"); font-weight: 500; font-display: block; }
+
+  :root {
+    --bg: #0b0b0a; --panel: #141413; --panel-2: #1b1b19;
+    --text: #f3f1ec; --muted: rgba(243,241,236,.58); --faint: rgba(243,241,236,.3);
+    --accent: #e9a23b;
+    --glass: rgba(255,255,255,.1);
+    --sans: "Geist", system-ui, sans-serif; --mono: "Geist Mono", ui-monospace, monospace; --serif: "Instrument Serif", Georgia, serif;
+    --ease: cubic-bezier(.2,.7,.2,1);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 400 15px/1.55 var(--sans); -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 14px 14px 96px; }
+  .eyebrow { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  h1 { font: 400 clamp(36px, 5vw, 56px)/1 var(--serif); margin: 10px 0 14px; }
+  .intro { max-width: 700px; color: var(--muted); margin: 0; }
+  .intro strong { color: var(--text); font-weight: 500; }
+  .head { padding: 42px 10px 28px; }
+
+  /* Full hero preview: as it would sit in the gallery */
+  .hero { position: relative; height: min(78vh, 760px); border-radius: 22px; overflow: hidden; background: #222 center/cover; }
+  .hero::before { content: ""; position: absolute; inset: 0; background: linear-gradient(rgba(0,0,0,.42), transparent 30%, transparent 75%, rgba(0,0,0,.5)); }
+  .hero .bar { position: absolute; top: 24px; left: 30px; right: 30px; display: flex; justify-content: space-between; align-items: flex-start; color: #fff; }
+  .hero .pills { display: flex; gap: 8px; margin-top: 4px; }
+  .hero .pills span { height: 38px; padding: 0 16px; border-radius: 999px; background: var(--glass); backdrop-filter: blur(30px) saturate(170%); -webkit-backdrop-filter: blur(30px) saturate(170%); display: grid; place-items: center; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
+  .hero-switch { position: absolute; bottom: 20px; left: 24px; display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 20px; margin: 22px 10px 8px; align-items: center; }
+  .seg { display: inline-flex; padding: 3px; border-radius: 999px; background: rgba(255,255,255,.07); }
+  .seg button { font: inherit; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); background: none; border: 0; padding: 7px 14px; border-radius: 999px; cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--text); color: var(--bg); }
+  .hero .seg { background: rgba(0,0,0,.25); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+  .hero .seg button { color: rgba(255,255,255,.75); }
+  .hero .seg button[aria-pressed="true"] { background: #fff; color: #111; }
+  .controls label { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); margin-right: 8px; }
+
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-top: 14px; }
+  .card { border-radius: 16px; background: var(--panel); overflow: hidden; display: flex; flex-direction: column; }
+  .stage { position: relative; min-height: 260px; display: grid; place-items: center; padding: 36px 24px; }
+  .stage svg { max-width: 100%; height: auto; overflow: visible; }
+  .num { position: absolute; top: 12px; left: 14px; font: 400 12px var(--mono); color: var(--faint); }
+  .strip { display: grid; grid-template-columns: 1.6fr 1fr 1fr; gap: 2px; background: var(--bg); }
+  .strip > div { background: var(--panel-2); min-height: 110px; display: grid; place-items: center; position: relative; }
+  .strip .photo { background: #333 center/cover; }
+  .strip .photo::before { content: ""; position: absolute; inset: 0; background: linear-gradient(rgba(0,0,0,.45), transparent 70%); }
+  .strip .photo .in { position: absolute; top: 12px; left: 16px; color: #fff; }
+  .strip .light { background: #efece6; color: #121211; }
+  .strip .fav { display: flex; gap: 10px; align-items: center; justify-content: center; }
+  .strip .fav span { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 8px; background: #000; color: #fff; overflow: hidden; }
+  .strip .fav span.s { width: 16px; height: 16px; border-radius: 4px; }
+  .strip small { position: absolute; bottom: 6px; left: 8px; font: 400 10px var(--mono); color: var(--faint); }
+  .strip .light small { color: rgba(0,0,0,.35); }
+  .strip .photo small { color: rgba(255,255,255,.5); }
+  .body { padding: 18px 20px 22px; }
+  .body h2 { font: 400 28px/1.1 var(--serif); margin: 0 0 6px; }
+  .body p { margin: 0 0 8px; color: var(--muted); font-size: 14px; }
+  .body p b { color: var(--text); font-weight: 500; }
+  .pending { color: var(--muted); text-align: center; max-width: 360px; font-size: 14px; }
+  .pending b { color: var(--text); font-weight: 500; }
+
+  .egg-focus { transition: fill .2s; }
+  .card:hover .egg-focus, .hero:hover .egg-focus { fill: var(--accent); animation: af .5s steps(1) 2; }
+  @keyframes af { 50% { opacity: 0; } }
+
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } .hero .pills { display: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero" id="hero">
+    <div class="bar"><div id="heroMark"></div><div class="pills"><span>All albums</span><span>All locations</span><span>All types</span><span>All cameras</span><span>All colours</span></div></div>
+    <div class="hero-switch">
+      <span class="seg" id="heroFont"><button data-v="galgo" aria-pressed="true">Galgo</button><button data-v="galgoFocus" aria-pressed="false">Galgo + focus</button><button data-v="melody" aria-pressed="false">Melody</button><button data-v="melodyFocus" aria-pressed="false">Melody + focus</button><button data-v="geist" aria-pressed="false">Current (Geist)</button></span>
+      <span class="seg" id="heroSize"><button data-v="40">S</button><button data-v="56" aria-pressed="true">M</button><button data-v="80" aria-pressed="false">L</button></span>
+    </div>
+  </section>
+
+  <div class="head">
+    <div class="eyebrow">Shots · Brand exploration · v0.3</div>
+    <h1>Just the name, typeset</h1>
+    <p class="intro">
+      “Shots” in sentence case, with no mark. Two candidates: <strong>Galgo</strong>, a tall, condensed sans (it's named after a long, thin dog) with a poster-like presence, and <strong>BL Melody</strong>, a warmer, Swiss-style grotesque. Above: how it sits in the gallery. Below: the variants side by side.
+    </p>
+  </div>
+
+  <div class="controls">
+    <div><label>Melody weight</label><span class="seg" id="mWeightSeg"><button data-v="300" aria-pressed="false">Light</button><button data-v="400" aria-pressed="false">Book</button><button data-v="500" aria-pressed="true">Medium</button><button data-v="600" aria-pressed="false">Semibold</button><button data-v="700" aria-pressed="false">Bold</button></span></div>
+    <div><label>Tracking</label><span class="seg" id="trackSeg"><button data-v="-0.01" aria-pressed="false">Tight</button><button data-v="0.01" aria-pressed="true">Normal</button><button data-v="0.05" aria-pressed="false">Open</button></span></div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+</div>
+
+<script>
+  const state = { track: 0.01, hero: 'galgo', heroSize: 56, mWeight: 500 };
+
+  // ---------- Glyph-accurate SVG wordmarks (same approach as wordmarks.html) ----------
+  const cv = document.createElement('canvas').getContext('2d');
+  function layout(text, f) {
+    cv.font = `${f.weight} ${f.size}px "${f.family}"`;
+    const tr = f.tracking * f.size, glyphs = [];
+    for (let i = 0; i < text.length; i++) {
+      const x = cv.measureText(text.slice(0, i)).width + i * tr, m = cv.measureText(text[i]);
+      glyphs.push({ ch: text[i], x, l: x - m.actualBoundingBoxLeft, r: x + m.actualBoundingBoxRight, t: -m.actualBoundingBoxAscent, b: m.actualBoundingBoxDescent });
+    }
+    const I = cv.measureText('l'), stem = I.actualBoundingBoxLeft + I.actualBoundingBoxRight;
+    const ink = { l: Math.min(...glyphs.map(g => g.l)), r: Math.max(...glyphs.map(g => g.r)), t: Math.min(...glyphs.map(g => g.t)), b: Math.max(...glyphs.map(g => g.b)) };
+    return { glyphs, stem, ink, size: f.size };
+  }
+  function render(text, f, eggs = []) {
+    const L = layout(text, f);
+    let body = L.glyphs.map(g => `<text x="${g.x.toFixed(2)}" y="0" font-family="${f.family}" font-weight="${f.weight}" font-size="${f.size}">${g.ch}</text>`).join('');
+    for (const e of eggs) body += e(L);
+    const b = L.ink, p = 1, w = b.r - b.l + 2 * p, h = b.b - b.t + 2 * p;
+    return `<svg viewBox="${(b.l - p).toFixed(2)} ${(b.t - p).toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)}" width="${w.toFixed(0)}" height="${h.toFixed(0)}" fill="currentColor" role="img" aria-label="Shots">${body}</svg>`;
+  }
+  // Focus square in the o's counter (sized to the narrow condensed counter)
+  const eggFocus = L => {
+    const g = L.glyphs.find(g => g.ch === 'o' || g.ch === 'O'); if (!g) return '';
+    const cx = (g.l + g.r) / 2, cy = (g.t + g.b) / 2, counter = (g.r - g.l) - 2 * L.stem;
+    const s = Math.max(1, Math.min(counter * .5, L.stem * 1.2));
+    return `<rect class="egg-focus" x="${cx - s / 2}" y="${cy - s / 2}" width="${s}" height="${s}"/>`;
+  };
+
+  const galgo = size => ({ family: 'Galgo', weight: 500, size, tracking: state.track });
+  // Melody is a regular-width grotesque: scale it down so its cap height roughly matches Galgo's, and track it slightly tighter
+  const melody = size => ({ family: 'BL Melody', weight: state.mWeight, size: size * .66, tracking: state.track - .03 });
+  const geist = size => ({ family: 'Geist', weight: 300, size: size * .42, tracking: .36 });
+
+  const VARIANTS = {
+    galgo:      { name: 'Galgo', text: 'Shots', font: galgo, eggs: [], fav: 'S',
+                  what: 'Plain and confident. Tall capitals and a narrow body mean it reads big without taking up width. In the hero it has presence that the frosted pills don\'t compete with.' },
+    galgoFocus: { name: 'Galgo + focus', text: 'Shots', font: galgo, eggs: [eggFocus], fav: 'o',
+                  what: 'The same, with the one hidden detail: an <b>autofocus square</b> in the tall, narrow counter of the o. Hover to see it confirm. The o on its own becomes the favicon.' },
+    melody:     { name: 'BL Melody', text: 'Shots', font: melody, eggs: [], fav: 'S',
+                  what: 'A 1960s Swiss-style grotesque by Boulevard LAB. Wider and friendlier than Galgo: the rounded, open letters feel warm and approachable. Try the weights above. <b>Personal-use licence only</b>, so a commercial licence would be needed to ship it.' },
+    melodyFocus:{ name: 'BL Melody + focus', text: 'Shots', font: melody, eggs: [eggFocus], fav: 'o',
+                  what: 'Melody with the <b>autofocus square</b> in the o. Melody\'s round, open o gives the square more breathing room than Galgo\'s narrow one.' },
+    geist:      { name: 'Current (Geist caps)', text: 'SHOTS', font: geist, eggs: [], fav: 'S',
+                  what: 'For comparison: the light, wide-spaced placeholder currently in the prototype. Calmer, but more generic.' },
+  };
+  const PHOTOS = { galgo: 57, galgoFocus: 204, melody: 88, melodyFocus: 129, geist: 12 };
+
+  function card(key, i) {
+    const v = VARIANTS[key];
+    return `<article class="card">
+      <div class="stage"><span class="num">${String(i + 1).padStart(2, '0')}</span>${render(v.text, v.font(120), v.eggs)}</div>
+      <div class="strip">
+        <div class="photo" style="background-image:url(https://picsum.photos/id/${PHOTOS[key]}/900/400)"><div class="in">${render(v.text, v.font(44), v.eggs)}</div><small>Header</small></div>
+        <div class="light">${render(v.text, v.font(56), v.eggs)}<small>Light</small></div>
+        <div class="fav"><span>${render(v.fav, v.font(30), v.fav === 'o' ? v.eggs : [])}</span><span class="s">${render(v.fav, v.font(15), v.fav === 'o' ? v.eggs : [])}</span><small>Favicon</small></div>
+      </div>
+      <div class="body"><h2>${v.name}</h2><p>${v.what}</p></div>
+    </article>`;
+  }
+
+  function draw() {
+    document.getElementById('grid').innerHTML = ['galgo', 'galgoFocus', 'melody', 'melodyFocus', 'geist'].map(card).join('');
+    document.querySelectorAll('.fav span svg').forEach(s => { s.removeAttribute('width'); s.style.height = '72%'; s.style.width = 'auto'; });
+    const v = VARIANTS[state.hero];
+    document.getElementById('heroMark').innerHTML = render(v.text, v.font(state.heroSize), v.eggs);
+    document.getElementById('hero').style.backgroundImage = 'url(https://picsum.photos/id/57/2000/1200)';
+  }
+  function seg(id, key, parse = v => v) {
+    document.getElementById(id).addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      state[key] = parse(b.dataset.v);
+      e.currentTarget.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+      draw();
+    });
+  }
+  seg('trackSeg', 'track', Number); seg('mWeightSeg', 'mWeight', Number); seg('heroFont', 'hero'); seg('heroSize', 'heroSize', Number);
+
+  Promise.all([document.fonts.load('500 64px Galgo'), document.fonts.load('300 64px Geist'),
+    ...[300, 400, 500, 600, 700].map(w => document.fonts.load(`${w} 64px "BL Melody"`))]).then(draw);
+</script>
+</body>
+</html>
