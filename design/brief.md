@@ -60,7 +60,7 @@ Exploring one photographer's body of work.
 - A dark, cinematic base. Controls are thin outlines, frosted glass or light pills, so the image carries the colour.
 - Controls have no outlines. They're filled with frosted glass instead.
 - Icons come from [pixelarticons](https://pixelarticons.com) (MIT licence), sized in multiples of 6px so the pixels stay crisp.
-- Type pairing: a clean grotesque for UI (Geist) and a refined serif for photo titles (Instrument Serif).
+- Type: a single family, Geist. Body text is Regular (400); headings are Medium (500) with slightly tighter letter spacing (-0.02em). There's no serif.
 - The photo in focus on the stage fills the whole container, edge to edge, with a soft gradient at the bottom so the controls stay readable. The fullscreen viewer still shows the whole, uncropped photo.
 
 ### Brand identity
@@ -70,10 +70,10 @@ Exploring one photographer's body of work.
 ### Real photos (2026-09-28)
 - 938 film scans in `design/sample-photos/` (gitignored). The file metadata is the lab scanner's, not the camera's. There are no dates and no GPS, so **folder names are the metadata source**.
 - **Folder rules:**
-  - camera → Camera (Olympus Mju II, Nikon, Zenit 11, Polaroid)
+  - camera → Camera (Nikon FM, Olympus Mju II, Polaroid 340AF, Zenit 11)
+  - the remaining title → Album. This is shown in the info panel, but it's **not a filter** (removed 2026-09-30).
   - a 4-digit year → Year
   - a place name → Location
-  - the remaining title → Album
   - `B&W` in the name or as a subfolder → Black & white
   - numbered roll subfolders merge into the parent album
   - `Test` folders are skipped, and accidental duplicates are removed

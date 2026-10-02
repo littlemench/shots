@@ -24,6 +24,18 @@
         "design"
       ],
       "port": 4322
+    },
+    {
+      "name": "site",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "4323",
+        "--directory",
+        "site"
+      ],
+      "port": 4323
     }
   ]
 }

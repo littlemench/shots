@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Shots — Gallery prototype</title>
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<meta name="description" content="Shots: film photography by Alex Menczykowski. Explore by place, type, camera, year and colour.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #0b0b0a;
@@ -31,7 +32,8 @@
     --gap: 14px;
     --gutter: var(--gap); /* page margin matches the thumbnail gap */
     --sans: "Geist", ui-sans-serif, system-ui, -apple-system, sans-serif;
-    --serif: "Instrument Serif", Georgia, serif;
+    /* Headings: the body font, one step heavier */
+    --heading-tracking: -.02em;
     --ease: cubic-bezier(.2, .7, .2, 1);
   }
   * { box-sizing: border-box; }
@@ -184,7 +186,7 @@
   .tile .meta .s { font-size: 12px; color: rgba(255,255,255,.85); }
   .tile.current { outline: 2px solid var(--text); }
   .empty { padding: 80px 0; text-align: center; color: var(--muted); }
-  .empty .t { font: 400 30px/1.2 var(--serif); color: var(--text); margin-bottom: 8px; }
+  .empty .t { font: 500 30px/1.2 var(--sans); letter-spacing: var(--heading-tracking); color: var(--text); margin-bottom: 8px; }
   .empty button { margin-top: 18px; }
 
   /* ---------- Fullscreen overlay ---------- */
@@ -207,7 +209,7 @@
     opacity: 0; transform: translateX(12px); pointer-events: none; transition: opacity .2s, transform .25s var(--ease);
   }
   .info.open { opacity: 1; transform: none; pointer-events: auto; }
-  .info h2 { font: 400 32px/1.05 var(--serif); margin: 0 0 4px; }
+  .info h2 { font: 500 32px/1.05 var(--sans); letter-spacing: var(--heading-tracking); margin: 0 0 4px; }
   .info .sub { color: var(--muted); margin-bottom: 18px; }
   .info dl { display: grid; grid-template-columns: 88px 1fr; gap: 10px 12px; margin: 0; font-size: 13px; }
   .info dt { color: var(--muted); padding-top: 5px; }
@@ -236,7 +238,7 @@
   .scrim.open .dialog { transform: none; }
   .dl-head { display: flex; gap: 16px; align-items: center; margin-bottom: 22px; }
   .dl-head img { width: 76px; height: 76px; object-fit: cover; border-radius: 10px; flex: none; }
-  .dl-head h2 { font: 400 28px/1.05 var(--serif); margin: 0 0 4px; }
+  .dl-head h2 { font: 500 28px/1.05 var(--sans); letter-spacing: var(--heading-tracking); margin: 0 0 4px; }
   .dl-head p { margin: 0; color: var(--muted); font-size: 13px; }
   .btn {
     display: flex; align-items: center; justify-content: center; gap: 10px; height: 48px; width: 100%;
@@ -389,7 +391,7 @@
 <div class="toast" id="toast" role="status"></div>
 
 <!-- Your photos (generated, gitignored). If missing, the placeholder set in photos.js is used. -->
-<script src="photos/_data.js?v=4" onerror="void 0"></script>
+<script src="photos/_data.js?v=5" onerror="void 0"></script>
 <script src="photos.js?v=2"></script>
 <script>
 (() => {
@@ -424,7 +426,6 @@
     mono: ['Black & white', 'linear-gradient(135deg,#eee 50%,#222 50%)'],
   };
   const FACETS = [
-    { key: 'album', label: 'Albums', all: 'All albums', get: p => [p.album] },
     { key: 'location', label: 'Locations', all: 'All locations', get: p => [].concat(p.location || []) },
     { key: 'type', label: 'Types', all: 'All types', get: p => p.types || [] },
     { key: 'camera', label: 'Cameras', all: 'All cameras', get: p => p.camera ? [p.camera] : [] },
@@ -632,7 +633,7 @@
       <h2>${placeOf(p)}</h2>
       <div class="sub">${p.year || 'Undated'}</div>
       <dl>
-        <dt>Album</dt><dd>${chip('album', p.album, p.album)}</dd>
+        <dt>Album</dt><dd class="plain">${p.album}</dd>
         ${places(p).length ? `<dt>Location</dt><dd>${places(p).map(l => chip('location', l, l)).join('')}</dd>` : ''}
         ${(p.types || []).length ? `<dt>Type</dt><dd>${p.types.map(t => chip('type', t, t)).join('')}</dd>` : ''}
         ${p.camera ? `<dt>Camera</dt><dd>${chip('camera', p.camera, p.camera)}</dd>` : ''}

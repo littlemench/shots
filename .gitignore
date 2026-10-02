@@ -4,3 +4,5 @@ design/sample-photos/
 design/prototype/photos/
 # Third-party screenshots used as private design references
 design/references/
+# Curated photo library (source of truth for the gallery)
+design/photos/
