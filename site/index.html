@@ -562,9 +562,10 @@
   const openSheet = (o) => { renderSheet(); $('sheet').classList.toggle('open', o); $('sheetScrim').classList.toggle('open', o); };
 
   // ---------- Apply ----------
-  function apply({ keepCurrent = false } = {}) {
+  function apply({ keepCurrent = false, random = false } = {}) {
     results = PHOTOS.filter(p => matches(p));
-    if (!keepCurrent || !results.some(p => p.id === current)) current = results[0]?.id ?? null;
+    if (random && results.length) current = results[Math.floor(Math.random() * results.length)].id;
+    else if (!keepCurrent || !results.some(p => p.id === current)) current = results[0]?.id ?? null;
     renderPills(); renderPopover(); renderGrid();
     if ($('sheet').classList.contains('open')) renderSheet();
     renderCurrent();
@@ -811,10 +812,10 @@
 
   // ---------- Boot ----------
   const startPhoto = readUrl();
-  apply();
+  // A fresh random hero on every visit (from within any filters in the link),
+  // picked before the first render so no other photo flashes up first
+  apply({ random: true });
   if (startPhoto && byId[startPhoto] && results.some(p => p.id === startPhoto)) openOverlay(startPhoto);
-  // A fresh random hero on every visit (from within any filters in the link)
-  else if (results.length) { current = results[Math.floor(Math.random() * results.length)].id; renderCurrent(); }
 })();
 </script>
 </body>
