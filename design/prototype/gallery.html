@@ -264,8 +264,23 @@
   .credit .btn { width: auto; height: auto; padding: 0 16px; border-radius: 12px; font-size: 13px; }
   .licence { margin-top: 10px; font-size: 12px; color: var(--faint); }
   .licence a { color: var(--muted); }
-  .donate { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
-  .donate .btn { height: 44px; font-size: 14px; }
+  .dl-ask { margin: 0 0 14px; color: var(--muted); font-size: 13px; }
+  #contactScrim { z-index: 80; }
+  .contact-title { font: 500 28px/1.05 var(--sans); letter-spacing: var(--heading-tracking); margin: 0 0 8px; }
+  .contact { display: grid; gap: 12px; }
+  .contact label { display: grid; gap: 6px; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .contact input, .contact textarea {
+    font: 400 15px/1.4 var(--sans); color: var(--text); background: rgba(0,0,0,.25);
+    border: 1px solid var(--line); border-radius: 12px; padding: 11px 13px; resize: vertical; text-transform: none; letter-spacing: 0;
+  }
+  .contact input:focus, .contact textarea:focus { outline: none; border-color: var(--line-strong); }
+  .contact .hp { position: absolute; left: -9999px; }
+  .contact .btn[disabled] { opacity: .5; }
+  .pay { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .pay .btn { height: 46px; font-size: 14px; }
+  .dl-done h3 { margin: 0 0 6px; font-size: 16px; font-weight: 500; }
+  .dl-done p { margin: 0 0 14px; color: var(--muted); font-size: 13px; }
+  .dl-done a { color: var(--text); }
 
   /* ---------- Mobile sheet ---------- */
   .sheet {
@@ -388,6 +403,10 @@
 
 <div class="popover" id="popover" role="menu"></div>
 
+<div class="scrim" id="contactScrim">
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="contactTitle" id="contactDialog"></div>
+</div>
+
 <div class="scrim" id="dlScrim">
   <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlTitle" id="dlDialog"></div>
 </div>
@@ -470,7 +489,8 @@
   // Donations go straight to PayPal; the site never handles payments
   const DONATE_URL = 'https://paypal.me/alexmench';
   const DONATE_AMOUNTS = [2, 5, 10, 25];
-  const CONTACT_EMAIL = 'alex.menczykowski@gmail.com';
+  // Contact form: Formspree forwards submissions to Alex's email (address never appears on the site)
+  const CONTACT_FORM_ENDPOINT = 'https://formspree.io/f/xljdypdp';
   const CONTACT_INSTAGRAM = 'https://www.instagram.com/alex.mench/';
 
   // ?o= changes when a photo is rotated, so the browser doesn't show a stale cached copy
@@ -700,25 +720,80 @@
         <img src="${img(p, 300)}" alt="">
         <div><h2 id="dlTitle">Download</h2><p>${[placeOf(p), p.year].filter(Boolean).join(', ')}<br>Full resolution · ${dw.toLocaleString()} × ${dh.toLocaleString()} · uncropped</p></div>
       </div>
-      <a class="btn" href="${fullSrc(p)}" target="_blank" rel="noopener" download>${ICON.download} Download free</a>
+      <div id="dlStep">
+        <p class="dl-ask">Downloads are free. If you'd like to support the work, choose an amount: PayPal opens in a new tab and your download starts straight away.</p>
+        <div class="pay">
+          <button class="btn" data-pay="free">${ICON.download} Free</button>
+          ${DONATE_AMOUNTS.map(a => `<button class="btn ghost" data-pay="${a}">£${a}</button>`).join('')}
+          <button class="btn ghost" data-pay="other">Other</button>
+        </div>
+        <div class="licence">Shots never sees your payment details.</div>
+      </div>
       <div class="section">
         <h3>Using this photo?</h3>
         <p>Free for personal, non-commercial use, unedited and with credit. Copy this line wherever it appears.</p>
         <div class="credit"><code id="creditText">${credit}</code><button class="btn ghost" id="copyCredit">Copy</button></div>
-        <div class="licence">Licence: <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" rel="noopener">CC BY-NC-ND 4.0</a>. For commercial use, get in touch by <a href="mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(`Using a photo from Shots (${p.id})`)}">email</a> or on <a href="${CONTACT_INSTAGRAM}" target="_blank" rel="noopener">Instagram</a>.</div>
+        <div class="licence">Licence: <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" rel="noopener">CC BY-NC-ND 4.0</a>. For commercial use, get in touch with the <a href="#" data-contact>contact form</a> or on <a href="${CONTACT_INSTAGRAM}" target="_blank" rel="noopener">Instagram</a>.</div>
       </div>
-      <div class="section">
-        <h3>Support the work</h3>
-        <p>Downloads are free and always will be. If this photo is useful to you, a small donation keeps the camera loaded.</p>
-        <div class="donate">
-          ${DONATE_AMOUNTS.map(a => `<a class="btn ghost" href="${DONATE_URL}/${a}GBP" target="_blank" rel="noopener">£${a}</a>`).join('')}
-          <a class="btn ghost" href="${DONATE_URL}" target="_blank" rel="noopener">Other</a>
-        </div>
-        <div class="licence">Opens PayPal in a new tab. Shots never sees your payment details.</div>
-      </div>`;
+`;
     $('dlScrim').classList.add('open');
-    $('dlDialog').querySelector('.btn').focus();
+    $('dlDialog').querySelector('[data-pay="free"]').focus();
   }
+  // Choosing an option always starts the download; paid options also open PayPal
+  function choosePay(choice) {
+    const p = byId[current]; if (!p) return;
+    if (choice !== 'free') window.open(choice === 'other' ? DONATE_URL : `${DONATE_URL}/${choice}GBP`, '_blank', 'noopener');
+    startDownload(p);
+    $('dlStep').innerHTML = `
+      <div class="dl-done">
+        <h3>${choice === 'free' ? 'Your download has started' : 'Thank you! Your download has started'}</h3>
+        <p>${choice === 'free' ? 'Enjoy the photo.' : 'Finish your donation in the PayPal tab.'} Not downloading? <a href="${fullSrc(p)}" download>Try again</a>.</p>
+        <button class="btn ghost" data-close-dl>Close</button>
+      </div>`;
+    $('dlStep').querySelector('[data-close-dl]').focus();
+  }
+  function startDownload(p) {
+    const a = document.createElement('a');
+    a.href = fullSrc(p); a.download = `shots-${p.id}.jpg`;
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+  // ---------- Contact form ----------
+  function openContact() {
+    const p = byId[current];
+    $('contactDialog').innerHTML = `
+      <button class="panel-close" data-close-contact aria-label="Close">${ICON.close}</button>
+      <h2 id="contactTitle" class="contact-title">Get in touch</h2>
+      <p class="dl-ask">For commercial use, prints or anything else. ${p ? 'The photo you were looking at is attached to your message.' : ''}</p>
+      <form id="contactForm" class="contact" novalidate>
+        <label>Name<input name="name" autocomplete="name" required></label>
+        <label>Email<input name="email" type="email" autocomplete="email" required></label>
+        <label>Message<textarea name="message" rows="5" required></textarea></label>
+        <input type="hidden" name="photo" value="${p ? `${p.id}: ${subOf(p)}` : ''}">
+        <input type="text" name="_gotcha" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <button class="btn" type="submit">Send message</button>
+        <div class="licence" id="contactStatus" role="status"></div>
+      </form>`;
+    $('contactScrim').classList.add('open');
+    $('contactForm').addEventListener('submit', sendContact);
+    $('contactForm').querySelector('input').focus();
+  }
+  function closeContact() { $('contactScrim').classList.remove('open'); }
+  async function sendContact(e) {
+    e.preventDefault();
+    const f = e.target, st = $('contactStatus'), btn = f.querySelector('button[type=submit]');
+    if (!f.checkValidity()) { st.textContent = 'Please fill in your name, a valid email and a message.'; return; }
+    if (!CONTACT_FORM_ENDPOINT) { st.textContent = 'The contact form isn\'t connected yet. Try Instagram for now.'; return; }
+    btn.disabled = true; st.textContent = 'Sending…';
+    try {
+      const res = await fetch(CONTACT_FORM_ENDPOINT, { method: 'POST', body: new FormData(f), headers: { Accept: 'application/json' } });
+      if (!res.ok) throw new Error();
+      f.innerHTML = `<div class="dl-done"><h3>Thanks, message sent</h3><p>I'll reply to the email you gave.</p><button class="btn ghost" type="button" data-close-contact>Close</button></div>`;
+    } catch {
+      btn.disabled = false; st.textContent = 'Something went wrong. Please try again, or use Instagram.';
+    }
+  }
+  $('contactScrim').addEventListener('click', e => { if (e.target === $('contactScrim')) closeContact(); });
+
   function closeDownload() { $('dlScrim').classList.remove('open'); lastFocus?.focus?.(); }
 
   let toastT;
@@ -744,6 +819,9 @@
     }
     if (t.classList.contains('tile')) return openOverlay(t.dataset.id);
     if ('closeDl' in t.dataset) return closeDownload();
+    if (t.dataset.pay) return choosePay(t.dataset.pay);
+    if ('contact' in t.dataset) { e.preventDefault(); return openContact(); }
+    if ('closeContact' in t.dataset) return closeContact();
     if (t.id === 'copyCredit') {
       navigator.clipboard?.writeText($('creditText').textContent).then(() => toast('Credit copied'), () => toast('Select the text to copy'));
       t.textContent = 'Copied'; return;
@@ -778,6 +856,7 @@
   document.addEventListener('keydown', (e) => {
     if (e.metaKey || e.ctrlKey || e.altKey || e.target.matches?.('input, textarea')) return;
     if (e.key === 'Escape') {
+      if ($('contactScrim').classList.contains('open')) return closeContact();
       if ($('dlScrim').classList.contains('open')) return closeDownload();
       if (openFacet) { const k = openFacet; openFacet = null; renderPills(); renderPopover(); return document.querySelector(`.pill[data-facet="${k}"]`)?.focus(); }
       if ($('sheet').classList.contains('open')) return openSheet(false);

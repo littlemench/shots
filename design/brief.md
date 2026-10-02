@@ -87,6 +87,8 @@ Exploring one photographer's body of work.
 
 ### Downloads
 - Free hi-res download for every shot.
+- **Download flow:** choose Free / £2 / £5 / £10 / £25 / Other. Every option starts the download straight away; paid options also open PayPal in a new tab. A confirmation follows, with a Close button.
+- **Contact:** a form (Formspree, forwarding to Alex's email; the address never appears on the site), plus Instagram.
 - Optional donation at download time: £2 / £5 / £10 / £25 / Other buttons linking to PayPal.Me (`paypal.me/alexmench/<n>GBP`). These open in a new tab, and no payments are handled in-app.
 - Credit information with a one-click copy: photographer name, title, link, licence.
 - **Licence: CC BY-NC-ND 4.0** (decided 2026-10-02). Free for non-commercial use, unedited, with credit. Commercial use by request.
