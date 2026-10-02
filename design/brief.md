@@ -87,9 +87,9 @@ Exploring one photographer's body of work.
 
 ### Downloads
 - Free hi-res download for every shot.
-- Optional donation prompt at download time. Links out to an external service (Ko-fi, Stripe Payment Link, etc.). No payments are handled in-app.
+- Optional donation at download time: £2 / £5 / £10 / £25 / Other buttons linking to PayPal.Me (`paypal.me/alexmench/<n>GBP`). These open in a new tab, and no payments are handled in-app.
 - Credit information with a one-click copy: photographer name, title, link, licence.
-- **Open question:** which licence? (e.g. CC BY 4.0, or custom terms.)
+- **Licence: CC BY-NC-ND 4.0** (decided 2026-10-02). Free for non-commercial use, unedited, with credit. Commercial use by request.
 
 ### Future: conversational search
 Visitors describe what they want ("quiet blue streets at dusk") and the tool surfaces the most relevant shots. The tag model should be designed now so it can support this later: structured tags, plus a free-text description per photo.

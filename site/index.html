@@ -263,6 +263,9 @@
   }
   .credit .btn { width: auto; height: auto; padding: 0 16px; border-radius: 12px; font-size: 13px; }
   .licence { margin-top: 10px; font-size: 12px; color: var(--faint); }
+  .licence a { color: var(--muted); }
+  .donate { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .donate .btn { height: 44px; font-size: 14px; }
 
   /* ---------- Mobile sheet ---------- */
   .sheet {
@@ -464,6 +467,9 @@
   const countryOf = v => LOC_TREE.find(g => g.places.includes(v))?.country;
   const subOf = p => [placeOf(p), p.year].filter(Boolean).join(' · ');
   const PHOTOGRAPHER = window.SHOTS_PHOTOGRAPHER || 'the photographer';
+  // Donations go straight to PayPal; the site never handles payments
+  const DONATE_URL = 'https://paypal.me/alexmench';
+  const DONATE_AMOUNTS = [2, 5, 10, 25];
 
   // ?o= changes when a photo is rotated, so the browser doesn't show a stale cached copy
   const img = (p, w) => p.src ? (w <= 900 ? p.src.s : p.src.l) + `?o=${p.w > p.h ? 'l' : 'p'}` : `https://picsum.photos/id/${p.id}/${w}/${Math.round(w * p.h / p.w)}`;
@@ -684,7 +690,7 @@
   function openDownload() {
     const p = byId[current]; if (!p) return;
     lastFocus = document.activeElement;
-    const credit = `Photo by ${p.author || PHOTOGRAPHER}, ${[placeOf(p), p.year].filter(Boolean).join(' ')}. Via Shots. CC BY 4.0`;
+    const credit = `Photo by ${p.author || PHOTOGRAPHER}, ${[placeOf(p), p.year].filter(Boolean).join(' ')}. Via Shots. CC BY-NC-ND 4.0`;
     const [dw, dh] = fullDims(p);
     $('dlDialog').innerHTML = `
       <button class="panel-close" data-close-dl aria-label="Close">${ICON.close}</button>
@@ -695,14 +701,18 @@
       <a class="btn" href="${fullSrc(p)}" target="_blank" rel="noopener" download>${ICON.download} Download free</a>
       <div class="section">
         <h3>Using this photo?</h3>
-        <p>Please credit it. Copy this line wherever it appears.</p>
+        <p>Free for personal, non-commercial use, unedited and with credit. Copy this line wherever it appears.</p>
         <div class="credit"><code id="creditText">${credit}</code><button class="btn ghost" id="copyCredit">Copy</button></div>
-        <div class="licence">Licence: CC BY 4.0 (placeholder, still to be confirmed)</div>
+        <div class="licence">Licence: <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" rel="noopener">CC BY-NC-ND 4.0</a>. For commercial use, please get in touch.</div>
       </div>
       <div class="section">
         <h3>Support the work</h3>
         <p>Downloads are free and always will be. If this photo is useful to you, a small donation keeps the camera loaded.</p>
-        <a class="btn ghost" href="#" id="donate">${ICON.heart} Donate</a>
+        <div class="donate">
+          ${DONATE_AMOUNTS.map(a => `<a class="btn ghost" href="${DONATE_URL}/${a}GBP" target="_blank" rel="noopener">£${a}</a>`).join('')}
+          <a class="btn ghost" href="${DONATE_URL}" target="_blank" rel="noopener">Other</a>
+        </div>
+        <div class="licence">Opens PayPal in a new tab. Shots never sees your payment details.</div>
       </div>`;
     $('dlScrim').classList.add('open');
     $('dlDialog').querySelector('.btn').focus();
@@ -736,7 +746,6 @@
       navigator.clipboard?.writeText($('creditText').textContent).then(() => toast('Credit copied'), () => toast('Select the text to copy'));
       t.textContent = 'Copied'; return;
     }
-    if (t.id === 'donate') { e.preventDefault(); return toast('Donation link (Ko-fi / Stripe) goes here'); }
     if (t.id === 'sheetDone') return openSheet(false);
     if (openFacet && !t.closest('#popover')) { openFacet = null; renderPills(); renderPopover(); }
   });
