@@ -6,3 +6,5 @@ design/prototype/photos/
 design/references/
 # Curated photo library (source of truth for the gallery)
 design/photos/
+.venv/
+design/orientation-check.jpg

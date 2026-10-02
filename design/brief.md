@@ -50,6 +50,7 @@ Exploring one photographer's body of work.
 - **Dropped:** film stock and orientation filters.
 - **ⓘ info panel:** shows the photo's tags, and each tag is clickable to show every photo that shares it.
 - **Spacing:** the page margin (top and sides) matches the gap between thumbnails: 14px on desktop, 8px on mobile.
+- **Random hero on load:** every visit opens on a random photo. If the link includes filters, it's chosen from within them. A link to a specific photo (`?photo=`) still opens that photo.
 - **Random button:** a frosted shuffle button sits to the left of the filters. It picks a random photo for the hero from the current filtered results, never repeating the one showing, and scrolls back up to the hero if needed. Keyboard shortcut: `r`.
 - **Hero corners** use the same radius as the thumbnails (14px desktop, 10px mobile).
 - **Rounded corners:** thumbnails and stage are slightly clipped, but downloads are always uncropped.
@@ -116,3 +117,11 @@ Getting photos in and making them discoverable. *To be designed collaboratively.
 - [ ] Aesthetic references → `design/references/`
 - [ ] Top frustrations with Flickr (design anti-principles)
 - [ ] "More interesting criteria" — further thoughts
+
+### Curated library (2026-10-02)
+- **Source:** `design/photos/` (gitignored), processed by `tools/process_photos.py`.
+- **Photo ids** come from file contents, so renaming or moving folders keeps rotations and tags.
+- **Duplicates skipped automatically:** exact copies, near-identical frames, and copies scanned at a different rotation. Originals win over `name(1).jpg` copies.
+- **Locations have two tiers, Country › Place:** e.g. Spain › Mallorca. Choosing a country includes all its places. Folders that name only a country (e.g. Greece) get no place.
+- **Public album names** can be overridden in the tool (e.g. employer references removed).
+- **Result:** 1,078 photos. Every photo has suggested types and has been checked for rotation (status "suggested", awaiting your review).

@@ -116,6 +116,10 @@
   .opt[aria-checked="true"] .box::after { content: ""; width: 8px; height: 4px; border: 1.6px solid var(--bg); border-top: 0; border-right: 0; transform: translateY(-1px) rotate(-45deg); }
   .swatch { width: 14px; height: 14px; border-radius: 50%; flex: none; box-shadow: inset 0 0 0 1px rgba(255,255,255,.2); }
   .opt .name { flex: 1; }
+  .opt.country .name { font-weight: 500; }
+  .opt.place { padding-left: 34px; }
+  .chips + .chips { margin-top: 8px; }
+  .chips .chip.country { font-weight: 500; }
   .opt .count { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 12px; }
   .pop-foot { display: flex; justify-content: space-between; padding: 8px 10px 6px; margin-top: 4px; border-top: 1px solid var(--line); }
   .text-btn { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
@@ -425,8 +429,13 @@
     green: ['Green', '#5f9a55'], blue: ['Blue', '#4a7fbf'], purple: ['Purple', '#8a6bb8'],
     mono: ['Black & white', 'linear-gradient(135deg,#eee 50%,#222 50%)'],
   };
+  // Display helpers: place falls back to album, year may be missing
+  const places = p => [].concat(p.location || []).map(l => typeof l === 'string' ? { country: l, place: null } : l);
+  const placeOf = p => places(p).map(l => l.place || l.country).join(' & ') || p.album;
   const FACETS = [
-    { key: 'location', label: 'Locations', all: 'All locations', get: p => [].concat(p.location || []) },
+    // Two tiers: a photo matches its country and its place, e.g. Spain and Mallorca
+    { key: 'location', label: 'Locations', all: 'All locations', tree: true,
+      get: p => places(p).flatMap(l => l.place ? [l.country, l.place] : [l.country]) },
     { key: 'type', label: 'Types', all: 'All types', get: p => p.types || [] },
     { key: 'camera', label: 'Cameras', all: 'All cameras', get: p => p.camera ? [p.camera] : [] },
     { key: 'year', label: 'Years', all: 'All years', get: p => [p.year ? String(p.year) : 'Undated'],
@@ -442,9 +451,17 @@
   });
   const nameOf = (f, v) => f.name ? f.name(v) : v;
 
-  // Display helpers: place falls back to album, year may be missing
-  const places = p => [].concat(p.location || []);
-  const placeOf = p => places(p).join(' & ') || p.album;
+  // Country -> places, for the grouped Locations dropdown
+  const LOC_TREE = (() => {
+    const t = new Map();
+    for (const p of PHOTOS) for (const l of places(p)) {
+      if (!t.has(l.country)) t.set(l.country, new Set());
+      if (l.place) t.get(l.country).add(l.place);
+    }
+    const byName = (a, b) => a.localeCompare(b);
+    return [...t.keys()].sort(byName).map(c => ({ country: c, places: [...t.get(c)].sort(byName) }));
+  })();
+  const countryOf = v => LOC_TREE.find(g => g.places.includes(v))?.country;
   const subOf = p => [placeOf(p), p.year].filter(Boolean).join(' · ');
   const PHOTOGRAPHER = window.SHOTS_PHOTOGRAPHER || 'the photographer';
 
@@ -497,13 +514,15 @@
     $('mobileFilterLbl').innerHTML = `${n ? `${n} filter${n === 1 ? '' : 's'}` : 'Filters'} <span class="n">(${results.length})</span>`;
     $('mobileFilterBtn').classList.toggle('active', !!n);
   }
+  function optHtml(f, v, cls = '') {
+    const c = countFor(f, v), on = sel[f.key].has(v);
+    const sw = f.key === 'colour' ? `<span class="swatch" style="background:${COLOURS[v][1]}"></span>` : '';
+    return `<button class="opt${cls}" role="menuitemcheckbox" aria-checked="${on}" data-facet="${f.key}" data-value="${v}" ${!c && !on ? 'disabled' : ''}>
+      <span class="box"></span>${sw}<span class="name">${nameOf(f, v)}</span><span class="count">${c}</span></button>`;
+  }
   function optionsHtml(f) {
-    return f.values.map(v => {
-      const c = countFor(f, v), on = sel[f.key].has(v);
-      const sw = f.key === 'colour' ? `<span class="swatch" style="background:${COLOURS[v][1]}"></span>` : '';
-      return `<button class="opt" role="menuitemcheckbox" aria-checked="${on}" data-facet="${f.key}" data-value="${v}" ${!c && !on ? 'disabled' : ''}>
-        <span class="box"></span>${sw}<span class="name">${nameOf(f, v)}</span><span class="count">${c}</span></button>`;
-    }).join('');
+    if (f.tree) return LOC_TREE.map(g => optHtml(f, g.country, ' country') + g.places.map(pl => optHtml(f, pl, ' place')).join('')).join('');
+    return f.values.map(v => optHtml(f, v)).join('');
   }
   function renderPopover() {
     const pop = $('popover');
@@ -527,15 +546,18 @@
   function renderSheet() {
     const n = results.length;
     $('sheet').innerHTML = `<div class="grabber"></div>` + FACETS.map(f => `
-      <h3>${f.label}</h3><div class="chips">${f.values.map(v => {
-        const c = countFor(f, v), on = sel[f.key].has(v);
-        const sw = f.key === 'colour' ? `<span class="swatch" style="background:${COLOURS[v][1]}"></span>` : '';
-        return `<button class="chip" aria-pressed="${on}" data-facet="${f.key}" data-value="${v}" ${!c && !on ? 'disabled' : ''}>${sw}${nameOf(f, v)} <span class="count">${c}</span></button>`;
-      }).join('')}</div>`).join('') + `
+      <h3>${f.label}</h3>${f.tree
+        ? LOC_TREE.map(g => `<div class="chips">${chipHtml(f, g.country, ' country')}${g.places.map(pl => chipHtml(f, pl)).join('')}</div>`).join('')
+        : `<div class="chips">${f.values.map(v => chipHtml(f, v)).join('')}</div>`}`).join('') + `
       <div class="sheet-foot">
         <button class="btn ghost" data-clear-all>Clear all</button>
         <button class="btn" id="sheetDone">Show ${n} photo${n === 1 ? '' : 's'}</button>
       </div>`;
+  }
+  function chipHtml(f, v, cls = '') {
+    const c = countFor(f, v), on = sel[f.key].has(v);
+    const sw = f.key === 'colour' ? `<span class="swatch" style="background:${COLOURS[v][1]}"></span>` : '';
+    return `<button class="chip${cls}" aria-pressed="${on}" data-facet="${f.key}" data-value="${v}" ${!c && !on ? 'disabled' : ''}>${sw}${nameOf(f, v)} <span class="count">${c}</span></button>`;
   }
   const openSheet = (o) => { renderSheet(); $('sheet').classList.toggle('open', o); $('sheetScrim').classList.toggle('open', o); };
 
@@ -550,6 +572,12 @@
   }
   function toggleValue(key, v) {
     sel[key].has(v) ? sel[key].delete(v) : sel[key].add(v);
+    // A country and one of its own places would overlap: picking one clears the other
+    if (key === 'location' && sel[key].has(v)) {
+      const group = LOC_TREE.find(g => g.country === v);
+      if (group) group.places.forEach(pl => sel[key].delete(pl));
+      else sel[key].delete(countryOf(v));
+    }
     apply();
   }
   function clearAll() { FACETS.forEach(f => sel[f.key].clear()); apply(); }
@@ -634,7 +662,7 @@
       <div class="sub">${p.year || 'Undated'}</div>
       <dl>
         <dt>Album</dt><dd class="plain">${p.album}</dd>
-        ${places(p).length ? `<dt>Location</dt><dd>${places(p).map(l => chip('location', l, l)).join('')}</dd>` : ''}
+        ${places(p).length ? `<dt>Location</dt><dd>${places(p).map(l => chip('location', l.country, l.country) + (l.place ? chip('location', l.place, l.place) : '')).join('')}</dd>` : ''}
         ${(p.types || []).length ? `<dt>Type</dt><dd>${p.types.map(t => chip('type', t, t)).join('')}</dd>` : ''}
         ${p.camera ? `<dt>Camera</dt><dd>${chip('camera', p.camera, p.camera)}</dd>` : ''}
         ${p.year ? `<dt>Year</dt><dd>${chip('year', String(p.year), p.year)}</dd>` : ''}
@@ -785,6 +813,8 @@
   const startPhoto = readUrl();
   apply();
   if (startPhoto && byId[startPhoto] && results.some(p => p.id === startPhoto)) openOverlay(startPhoto);
+  // A fresh random hero on every visit (from within any filters in the link)
+  else if (results.length) { current = results[Math.floor(Math.random() * results.length)].id; renderCurrent(); }
 })();
 </script>
 </body>
