@@ -470,6 +470,8 @@
   // Donations go straight to PayPal; the site never handles payments
   const DONATE_URL = 'https://paypal.me/alexmench';
   const DONATE_AMOUNTS = [2, 5, 10, 25];
+  const CONTACT_EMAIL = 'alex.menczykowski@gmail.com';
+  const CONTACT_INSTAGRAM = 'https://www.instagram.com/alex.mench/';
 
   // ?o= changes when a photo is rotated, so the browser doesn't show a stale cached copy
   const img = (p, w) => p.src ? (w <= 900 ? p.src.s : p.src.l) + `?o=${p.w > p.h ? 'l' : 'p'}` : `https://picsum.photos/id/${p.id}/${w}/${Math.round(w * p.h / p.w)}`;
@@ -703,7 +705,7 @@
         <h3>Using this photo?</h3>
         <p>Free for personal, non-commercial use, unedited and with credit. Copy this line wherever it appears.</p>
         <div class="credit"><code id="creditText">${credit}</code><button class="btn ghost" id="copyCredit">Copy</button></div>
-        <div class="licence">Licence: <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" rel="noopener">CC BY-NC-ND 4.0</a>. For commercial use, please get in touch.</div>
+        <div class="licence">Licence: <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" rel="noopener">CC BY-NC-ND 4.0</a>. For commercial use, get in touch by <a href="mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(`Using a photo from Shots (${p.id})`)}">email</a> or on <a href="${CONTACT_INSTAGRAM}" target="_blank" rel="noopener">Instagram</a>.</div>
       </div>
       <div class="section">
         <h3>Support the work</h3>
